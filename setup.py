@@ -16,6 +16,6 @@ setup (
     url = "https://github.com/BasementCat/fruitstand",
     packages = ["fruitstand", "tests"],
     test_suite = "nose.collector",
-    install_requires = [],
+    install_requires = ["bottle"],
     tests_require = ["nose"]
 )
