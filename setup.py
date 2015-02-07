@@ -2,6 +2,10 @@
 import os
 from setuptools import setup
 
+# evil, dirty hack to make `python setup.py sdist` work in a vagrant vbox vm
+if os.environ.get('USER','') == 'vagrant':
+    del os.link
+
 def read(filen):
     with open(os.path.join(os.path.dirname(__file__), filen), "r") as fp:
         return fp.read()
@@ -16,6 +20,6 @@ setup (
     url = "https://github.com/BasementCat/fruitstand",
     packages = ["fruitstand", "tests"],
     test_suite = "nose.collector",
-    install_requires = ["bottle"],
+    install_requires = ["bottle", "bottleutils"],
     tests_require = ["nose"]
 )
