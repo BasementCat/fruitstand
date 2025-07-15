@@ -1,5 +1,0 @@
-include *.md
-include .gitignore
-graft fruitstand
-graft tests
-global-exclude *.pyc
