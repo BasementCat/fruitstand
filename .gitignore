@@ -13,8 +13,8 @@ build/
 develop-eggs/
 dist/
 eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -54,3 +54,6 @@ docs/_build/
 
 # Virtualenv
 venv/
+
+.env*
+!.env.example

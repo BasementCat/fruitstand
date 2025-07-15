@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+flask-bootstrap = "*"
+flask-wtf = "*"
+wtforms = "*"
+alembic = "*"
+sqlalchemy = "*"
+flask-sqlalchemy = "*"
+python-dotenv = "*"
+pymysql = "*"
+flask-migrate = "*"
+arrow = "*"
+sqlalchemy-utils = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"

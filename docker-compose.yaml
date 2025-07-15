@@ -1,0 +1,36 @@
+services:
+  # web:
+  #   build: .
+  #   ports:
+  #     - 80:80
+  #   restart: always
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - DB_HOST=db
+  #     - DB_NAME=fruitstand
+  #     - DB_USER=fruitstand
+  #     - DB_PASS=password
+  #     - SECRET_KEY=totallyarealsecret
+  #   volumes:
+  #     - .:/var/www/html
+  db:
+    image: mariadb:lts
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      - MARIADB_ROOT_PASSWORD=password
+      - MARIADB_DATABASE=fruitstand
+      - MARIADB_USER=fruitstand
+      - MARIADB_PASSWORD=password
+    volumes:
+      - db-data:/var/lib/mysql
+  # mail:
+  #   image: mailhog/mailhog
+  #   restart: always
+  #   ports:
+  #     - '1025:1025'
+  #     - '8025:8025'
+volumes:
+  db-data: {}
