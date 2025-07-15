@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 from flask import Blueprint, Flask, url_for
 from flask_wtf import FlaskForm
@@ -36,7 +36,7 @@ class Screen:
 
     @classmethod
     def mount(cls, app: Flask):
-        app.register_blueprint(self.blueprint, url_prefix='/screens/render/' + self.key)
+        app.register_blueprint(cls.blueprint, url_prefix='/screens/render/' + cls.key)
 
     def setup(self):
         pass

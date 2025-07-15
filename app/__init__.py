@@ -25,7 +25,7 @@ def create_app():
     })
     app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config['SCREEN_IMPORTS'] or '').split(','))))
     app.config['SCREEN_IMPORTS'] += [
-        # 'app.screens.xxx',
+        'app.screens.zen_quotes',
     ]
 
     Bootstrap(app)
