@@ -35,6 +35,10 @@ class Screen:
             queue += s_cls.__subclasses__()
 
     @classmethod
+    def get_all(cls):
+        return dict(cls._all_screens)
+
+    @classmethod
     def mount(cls, app: Flask):
         app.register_blueprint(cls.blueprint, url_prefix='/screens/render/' + cls.key)
 

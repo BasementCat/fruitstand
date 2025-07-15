@@ -21,20 +21,26 @@ class Screen(Base):
     title = db.Column(db.UnicodeText(), nullable=False)
     description = db.Column(db.UnicodeText())
 
-    # public function sync($screens) {
-    #     $this->db->prepare("update `screen` set `present` = 0;")->execute();
-    #     foreach (array_values($screens) as $screen) {
-    #         $meta = $screen::getMeta();
-    #         $props = [
-    #             'key' => $meta['key'],
-    #             'title' => $meta['title'],
-    #             'description' => $meta['description'] ?? null,
-    #             'present' => 1,
-    #             'enabled' => 0,
-    #         ];
-    #         $this->insert($props, true, ['enabled']);
-    #     }
-    # }
+    @classmethod
+    def all_by_key(cls):
+        return {s.key: s for s in cls.query.order_by(cls.title.asc())}
+
+    @classmethod
+    def sync(cls, screen_classes):
+        existing = cls.all_by_key()
+        for screen_obj in existing.values():
+            screen_obj.present = False
+
+        for screen_class in screen_classes:
+            screen_obj = existing.get(screen_class.key)
+            if not screen_obj:
+                screen_obj = cls(key=screen_class.key)
+                db.session.add(screen_obj)
+                existing[screen_class.key] = screen_obj
+            screen_obj.present = True
+            screen_obj.title = screen_class.title
+            screen_obj.description = screen_class.description
+        db.session.commit()
 
 
 class Playlist(Base):

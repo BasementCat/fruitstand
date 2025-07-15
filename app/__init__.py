@@ -8,6 +8,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 
 from app.lib.screen import Screen
+from app.lib.jinja import apply_jinja_env
 
 
 db = SQLAlchemy()
@@ -31,8 +32,13 @@ def create_app():
     Bootstrap(app)
     db.init_app(app)
     Migrate(app, db)
+    apply_jinja_env(app)
 
     from app import models
+
+    from app.views import screen as screen_view
+
+    app.register_blueprint(screen_view.bp, url_prefix='/screen')
 
     for mod in app.config['SCREEN_IMPORTS']:
         importlib.import_module(mod)

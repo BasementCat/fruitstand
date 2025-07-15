@@ -1,0 +1,38 @@
+{% extends "base.html.j2" %}
+
+{% set title = 'Screens' %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Key</th>
+                <th>Present?</th>
+                <th>Enabled?</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in screens.values() %}
+                <tr>
+                    <td>{{ s.title }}</td>
+                    <td>{{ s.description |typed_label }}</td>
+                    <td>{{ s.key }}</td>
+                    <td>{{ s.present |typed_label }}</td>
+                    <td>{{ s.enabled |typed_label }}</td>
+                    <td>
+                        <form method="POST" action="#">
+                            <div class="btn-group" role="group" aria-label="Screen actions">
+                                <button type="submit" name="enabled" value="1" class="btn btn-sm btn-success {{ ('disabled' if s.enabled else '') if s.present else 'disabled' }}">Enable</button>
+                                <button type="submit" name="enabled" value="0" class="btn btn-sm btn-danger {{ '' if s.enabled else 'disabled' }}">Disable</button>
+                                <a href="#" class="btn btn-sm btn-primary {{ '' if s.present else 'disabled' }}">Configure</a>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
