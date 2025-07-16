@@ -13,6 +13,7 @@ class Screen:
     blueprint: Blueprint = None
     route: str = None
     config_form: Optional[FlaskForm] = None
+    default_config: Dict[str, Any] = {}
 
     def __init__(self, screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any]):
         self.screen_config = dict(screen_config)
@@ -37,6 +38,10 @@ class Screen:
     @classmethod
     def get_all(cls):
         return dict(cls._all_screens)
+
+    @classmethod
+    def get(cls, key):
+        return cls.get_all().get(key)
 
     @classmethod
     def mount(cls, app: Flask):

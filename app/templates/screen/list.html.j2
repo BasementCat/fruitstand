@@ -23,11 +23,11 @@
                     <td>{{ s.present |typed_label }}</td>
                     <td>{{ s.enabled |typed_label }}</td>
                     <td>
-                        <form method="POST" action="#">
+                        <form method="POST" action="{{ url_for('.toggle', screen_id=s.id, _method='POST') }}">
                             <div class="btn-group" role="group" aria-label="Screen actions">
                                 <button type="submit" name="enabled" value="1" class="btn btn-sm btn-success {{ ('disabled' if s.enabled else '') if s.present else 'disabled' }}">Enable</button>
                                 <button type="submit" name="enabled" value="0" class="btn btn-sm btn-danger {{ '' if s.enabled else 'disabled' }}">Disable</button>
-                                <a href="#" class="btn btn-sm btn-primary {{ '' if s.present else 'disabled' }}">Configure</a>
+                                <a href="{{ url_for('.configure', screen_id=s.id) }}" class="btn btn-sm btn-primary {{ '' if s.present and screen_classes[s.key].config_form else 'disabled' }}">Configure</a>
                             </div>
                         </form>
                     </td>

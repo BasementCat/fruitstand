@@ -75,24 +75,24 @@ class Config(Base):
     @property
     def value(self) -> Any:
         try:
-            return pickle.loads(self.value_serialized)
+            return pickle.loads(self.value_serialized.encode('ascii'))
         except:
             return None
 
     @value.setter
     def value(self, value: Any):
-        self.value_serialized = pickle.dumps(value)
+        self.value_serialized = pickle.dumps(value, protocol=0)
 
     @classmethod
     def for_screen_or_pls(cls, screen: Optional[Union[Screen, int]] = None, playlist_screen: Optional[Union[PlaylistScreen, int]] = None) -> Dict[str, Any]:
-        query = cls.query
         screen = None if screen is None else (screen.id if isinstance(screen, Screen) else screen)
         playlist_screen = None if playlist_screen is None else (playlist_screen.id if isinstance(playlist_screen, PlaylistScreen) else playlist_screen)
-        if screen:
-            query = query.filter(cls.screen_id == screen)
-        if playlist_screen:
-            query = query.filter(cls.playlist_screen_id == playlist_screen)
-        return screen, playlist_screen, query
+        query = cls.query.filter(cls.screen_id == screen, cls.playlist_screen_id == playlist_screen)
+        return (
+            screen,
+            playlist_screen,
+            query,
+        )
 
     @classmethod
     def load(cls, screen: Optional[Union[Screen, int]] = None, playlist_screen: Optional[Union[PlaylistScreen, int]] = None) -> Dict[str, Any]:
@@ -113,6 +113,7 @@ class Config(Base):
             if k not in configs:
                 c = cls(screen_id=screen, playlist_screen_id=playlist_screen, key=k, value='')
                 db.session.add(c)
+                configs[k] = c
             configs[k].value = v
         db.session.commit()
 
