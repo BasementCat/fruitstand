@@ -61,8 +61,7 @@ def configure(screen_id, playlist_screen_id=None):
             msg += f' in playlist {db_pls.playlist.name}'
         flash(msg, 'success')
         if db_pls:
-            # TODO: go to playlist screens
-            return redirect(url_for('.list'))
+            return redirect(url_for('playlist.edit_screens', playlist_id=db_pls.playlist.id))
         return redirect(url_for('.list'))
 
     if db_pls:

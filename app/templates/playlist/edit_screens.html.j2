@@ -1,0 +1,144 @@
+{% extends "base.html.j2" %}
+
+{% set title = 'Edit Screens: ' ~ playlist.name %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Screen</th>
+                <th>Status</th>
+                <th colspan="2">Refresh Interval</th>
+                <th>Has Config?</th>
+                <th>Move</th>
+                <th>Configure</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pls in playlist.playlist_screens %}
+                <tr>
+                    <td>{{ pls.screen.title }}</td>
+                    <td>
+                        {% if pls.screen.enabled and pls.screen.present %}
+                            {{ 'Active' |label('success') }}
+                        {% else %}
+                            {{ 'Unavailable' |label('danger') }}
+                        {% endif %}
+                    </td>
+                    <td style="white-space: nowrap;">
+                        {{ pls.refresh_interval or playlist.default_refresh_interval }}s
+                        {% if not pls.refresh_interval %}
+                            {{ 'Default' |label('default') }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" style="display: inline-block;">
+                            <input type="hidden" name="action" value="configure" />
+                            <input type="hidden" name="playlist_screen_id" value="{{ pls.id }}" />
+                            <input type="hidden" name="configure_action" value="refresh_interval" />
+                            <div class="btn-group">
+                                <a href="#" data-playlist_screen_id="{{ pls.id }}" data-screen_title="{{ pls.screen.title }}" data-refresh_interval="{{ pls.refresh_interval or playlist.default_refresh_interval }}" class="configure_refresh_interval btn btn-sm btn-primary">Edit</a>
+                                <button type="submit" name="refresh_interval" value="-1" class="btn btn-sm btn-warning">Reset</button>
+                            </div>
+                        </form>
+                    </td>
+                    <td>{{ pls.config |bool |typed_label(false_is_danger=False) }}</td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="move" />
+                            <input type="hidden" name="playlist_screen_id" value="{{ pls.id }}" />
+                            <div class="btn-group">
+                                <button type="submit" name="direction" value="up" class="btn btn-sm btn-primary">Up</button>
+                                <button type="submit" name="direction" value="down" class="btn btn-sm btn-primary">Down</button>
+                            </div>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="configure" />
+                            <input type="hidden" name="playlist_screen_id" value="{{ pls.id }}" />
+                            <div class="btn-group">
+                                <a href="{{ url_for('screen.configure', screen_id=pls.screen.id, playlist_screen_id=pls.id) }}" class="btn btn-sm btn-info">Edit</a>
+                                <button type="submit" name="configure_action" value="delete" class="btn btn-sm btn-warning">Delete</button>
+                            </div>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="delete" />
+                            <input type="hidden" name="playlist_screen_id" value="{{ pls.id }}" />
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <h2>Add Screen</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in screens %}
+                <tr>
+                    <td>{{ s.title }}</td>
+                    <td>{{ s.description |typed_label }}</td>
+                    <td>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="add_screen" />
+                            <input type="hidden" name="screen_id" value="{{ s.id }}" />
+                            <div class="btn-group">
+                                <button type="submit" name="where" value="start" class="btn btn-sm btn-primary">Add to Start</button>
+                                <button type="submit" name="where" value="end" class="btn btn-sm btn-primary">Add to End</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        (function() {
+            const send_refresh_interval_config = async function(pls_id, refresh_interval) {
+                const fd = new FormData();
+                fd.append('action', 'configure');
+                fd.append('configure_action', 'refresh_interval');
+                fd.append('playlist_screen_id', pls_id);
+                fd.append('refresh_interval', refresh_interval);
+                res = await fetch("{{ url_for('.edit_screens', playlist_id=playlist.id) }}", {
+                    'method': 'POST',
+                    'body': fd,
+                })
+                window.location.reload();
+            };
+
+            const clicked_config_button = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let new_interval = prompt("Enter a new refresh interval for " + e.target.dataset.screen_title, e.target.dataset.refresh_interval);
+                try {
+                    new_interval = parseInt(new_interval);
+                    if (new_interval) {
+                        send_refresh_interval_config(e.target.dataset.playlist_screen_id, new_interval);
+                    }
+                } catch (e) {}
+            };
+
+            const buttons = document.querySelectorAll('.configure_refresh_interval');
+            buttons.forEach(b => b.addEventListener('click', clicked_config_button));
+        })();
+    </script>
+{% endblock %}

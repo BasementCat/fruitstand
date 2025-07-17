@@ -1,0 +1,8 @@
+{% extends "base.html.j2" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% set title = ('Edit Playlist: ' ~ playlist.name) if playlist else 'New Playlist' %}
+
+{% block main %}
+    {{ wtf.quick_form(form, button_map={'submit': 'primary'}) }}
+{% endblock %}

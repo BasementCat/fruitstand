@@ -1,0 +1,37 @@
+{% extends "base.html.j2" %}
+
+{% set title = 'Playlists' %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Default Refresh Interval</th>
+                <th>Screens</th>
+                <th>Displays</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in playlists %}
+                <tr>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.description |typed_label }}</td>
+                    <td>{{ p.default_refresh_interval |typed_label }}</td>
+                    <td>{{ p.playlist_screens |count }}</td>
+                    <td>{{ p.displays |count }}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Playlist actions">
+                            <a class="btn btn-sm btn-primary" href="{{ url_for('playlist.edit', playlist_id=p.id) }}">Edit</a>
+                            <a class="btn btn-sm btn-info" href="{{ url_for('playlist.edit_screens', playlist_id=p.id) }}">Edit Screens</a>
+                            <a class="btn btn-sm btn-danger" href="{{ url_for('playlist.delete', playlist_id=p.id) }}">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a class="btn btn-primary" href="{{ url_for('playlist.edit') }}">Create Playlist</a>
+{% endblock %}

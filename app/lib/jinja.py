@@ -25,6 +25,11 @@ def apply_jinja_env(app):
     app.jinja_env.globals.update(jinja_env['globals'])
 
 
+@jfilter('bool')
+def bool_flt(value):
+    return bool(value)
+
+
 @jfilter()
 def label(value, level='default'):
     return Markup(f'<span class="label label-{level}">{value}</span>')

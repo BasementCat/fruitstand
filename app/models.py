@@ -54,21 +54,21 @@ class Playlist(Base):
 class PlaylistScreen(Base):
     __tablename__ = 'playlist_screen'
     id = db.Column(db.BigInteger(), primary_key=True)
-    playlist_id = db.Column(db.BigInteger(), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_playlist'), nullable=False)
-    playlist = db.relationship(Playlist, backref='playlist_screens')
-    screen_id = db.Column(db.BigInteger(), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_screen'), nullable=False)
-    playlist = db.relationship(Screen, backref='playlist_screens')
     order = db.Column(db.Integer(), nullable=False, default=0)
     refresh_interval = db.Column(db.Integer())
+    playlist_id = db.Column(db.BigInteger(), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_playlist'), nullable=False)
+    playlist = db.relationship(Playlist, backref=db.backref('playlist_screens', cascade='all,delete', order_by=order.asc()))
+    screen_id = db.Column(db.BigInteger(), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_screen'), nullable=False)
+    screen = db.relationship(Screen, backref=db.backref('playlist_screens', cascade='all,delete', order_by=order.asc()))
 
 
 class Config(Base):
     __tablename__ = 'config'
     id = db.Column(db.BigInteger(), primary_key=True)
     screen_id = db.Column(db.BigInteger(), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_config_screen'))
-    screen = db.relationship(Screen, backref='config')
+    screen = db.relationship(Screen, backref=db.backref('config', cascade='all,delete'))
     playlist_screen_id = db.Column(db.BigInteger(), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_config_playlist_screen'))
-    playlist_screen = db.relationship(PlaylistScreen, backref='config')
+    playlist_screen = db.relationship(PlaylistScreen, backref=db.backref('config', cascade='all,delete'))
     key = db.Column(db.Unicode(64), nullable=False)
     value_serialized = db.Column(db.Text(), nullable=False)
 
@@ -107,7 +107,7 @@ class Config(Base):
         screen, playlist_screen, query = cls.for_screen_or_pls(screen=screen, playlist_screen=playlist_screen)
         configs = {
             c.key: c
-            for c in cls.query
+            for c in query
         }
         for k, v in config.items():
             if k not in configs:

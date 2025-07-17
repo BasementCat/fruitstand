@@ -1,0 +1,25 @@
+{% extends "base.html.j2" %}
+
+{% set title = 'Delete Playlist: ' ~ playlist.name %}
+
+{% block main %}
+    <form method="POST">
+        <div class="row">
+            <div class="col-xs-12">
+                <p>Are you sure you want to delete the playlist {{ playlist.name }}?</p>
+                {% if playlist.displays %}
+                    <p>This playlist is assigned to {{ playlist.displays |count |plural('display') }}, {{ if_plural(playlist.displays |count, 'they', 'it') }} will have no playlist assigned.</p>
+                {% endif %}
+                {% if has_config %}
+                    <p>This playlist has configuration for specific screens, that configuration will be deleted as well.</p>
+                {% endif %}
+            </div>
+                <div class="col-xs-12">
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <a class="btn btn-block btn-default" href="{{ url_for('playlist.list') }}">Cancel</a>
+                        <button class="btn btn-block btn-danger" type="submit">Delete</button>
+                    </div>
+                </div>
+        </div>
+    </form>
+{% endblock %}
