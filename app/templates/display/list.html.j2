@@ -1,0 +1,40 @@
+{% extends "base.html.j2" %}
+
+{% set title = 'Displays' %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Name</th>
+                <th>First Seen</th>
+                <th>Last Seen</th>
+                <th>Type</th>
+                <th>Colors</th>
+                <th>Dimensions</th>
+                <th>Playlist</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in displays %}
+                <tr>
+                    <td>{{ d.key }}</td>
+                    <td>{{ d.name }}</td>
+                    <td>{{ d.created_at |dt |typed_label }}</td>
+                    <td>{{ d.last_seen_at |dt |typed_label }}</td>
+                    <td>{{ d.display_spec |display_spec }}</td>
+                    <td>{{ d.color_spec |color_spec }}</td>
+                    <td>{{ d.width }}x{{ d.height }}</td>
+                    <td>{{ (d.playlist.name if d.playlist else None) |typed_label }}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Display actions">
+                            <a class="btn btn-sm btn-primary" href="{{ url_for('display.edit', display_id=d.id) }}">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

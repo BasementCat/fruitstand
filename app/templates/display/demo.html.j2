@@ -1,0 +1,330 @@
+{% extends "base.html.j2" %}
+
+{% set title = 'Demo Display' %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        #dd_iframe {
+            border: 1px dotted #000;
+        }
+        #demo_config label {
+            display: block;
+            clear: both;
+        }
+        #demo_config h3 {
+            margin-top: 1.5em;
+            font-size: 1.5rem;
+        }
+        #demo_config h4 {
+            font-size: 1.1rem;
+            margin-top: 1em;
+        }
+        #demo_config .form-control.dims {
+            display: inline-block;
+            width: 5em;
+        }
+    </style>
+{% endblock %}
+
+{% block main %}
+    <div id="demo_config" class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <input type="text" id="dd_iframe_url" class="form-control disabled" disabled />
+                <iframe id="dd_iframe"></iframe>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <h2>Demo Display Config</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <h3>Basics</h3>
+                <label class="form-label">
+                    Key
+                    <input type="text" id="dd_key" class="form-control" />
+                </label>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <h3>Playlist/Screen</h3>
+                <label class="form-label">
+                    Playlist/Screen
+                    <select id="dd_playlist_screen" class="form-select">
+                        <option value="pl-0;s-0">[Playlist assigned to display]</option>
+                        {% for pl in playlists %}
+                            <optgroup label="{{ pl.name }}">
+                                <option value="pl-{{ pl.id }};s-0">[Screens assigned to playlist]</option>
+                                {% for pls in pl.playlist_screens %}
+                                    <option value="pl-{{ pl.id }};s-{{ pls.id }}">{{ pls.screen.title }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <h3>Display</h3>
+                <label class="form-label">
+                    Size - Common
+                    <select id="dd_size" class="form-select">
+                        <option value="">Other</option>
+                        <option value="128x128">128x128</option>
+                        <option value="160x128">160x128</option>
+                        <option value="240x240">240x240</option>
+                        <option value="320x240">320x240</option>
+                        <option value="480x320">480x320</option>
+                        <option value="480x480">480x480</option>
+                        <option value="800x480">800x480</option>
+                        <option value="800x600">800x600</option>
+                    </select>
+                </label>
+                <label class="form-label">
+                    Size
+                    <br>
+                    <input type="text" id="dd_width" class="form-control dims" />
+                    x
+                    <input type="text" id="dd_height" class="form-control dims" />
+                </label>
+                <label class="form-label">
+                    Color Spec
+                    <select id="dd_color_spec" class="form-select">
+                        {% for cs in COLOR_SPEC.values() %}
+                            <option value="{{ cs.key }}">{{ cs.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="form-label">
+                    Display Spec
+                    <select id="dd_display_spec" class="form-select">
+                        {% for ds in DISPLAY_SPEC.values() %}
+                            <option value="{{ ds.key }}">{{ ds.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <h3>Sensors</h3>
+
+                <h4>
+                    <label>
+                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_battery_enabled" />
+                        Battery
+                    </label>
+                </h4>
+                <label class="form-label">
+                    Value: <span id="dd_sensor_battery_value"></span>
+                    <input type="range" class="form-range" id="dd_sensor_battery" min="0.0" max="1.0" step="0.01" />
+                </label>
+
+                <h4>
+                    <label>
+                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_temperature_enabled" />
+                        Temperature
+                    </label>
+                </h4>
+                <label class="form-label">
+                    Value: <span id="dd_sensor_temperature_value"></span>
+                    <input type="range" class="form-range" id="dd_sensor_temperature" min="-100.0" max="200.0" step="0.01" />
+                </label>
+
+                <h4>
+                    <label>
+                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_humidity_enabled" />
+                        Humidity
+                    </label>
+                </h4>
+                <label class="form-label">
+                    Value: <span id="dd_sensor_humidity_value"></span>
+                    <input type="range" class="form-range" id="dd_sensor_humidity" min="0.0" max="1.0" step="0.01" />
+                </label>
+
+                <h4>
+                    <label>
+                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_pressure_enabled" />
+                        Barometric Pressure
+                    </label>
+                 </h4>
+                <label class="form-label">
+                    Value: <span id="dd_sensor_pressure_value"></span>
+                    <input type="range" class="form-range" id="dd_sensor_pressure" min="20.0" max="40.0" step="0.01" />
+                </label>
+            </div>
+            <div class="col-xs-12">
+                <button type="button" class="btn btn-primary" id="dd_update">Update</button>
+                <button type="button" class="btn btn-secondary" id="dd_reset">Reset</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        (function() {
+            let data = {
+                'key': 'demo-display',
+                'playlist': 0,
+                'playlist_screen': 0,
+                'width': 800,
+                'height': 480,
+                'color_spec': '1b',
+                'display_spec': 'static',
+                'sensor_battery_enabled': true,
+                'sensor_battery': 0.82,
+                'sensor_temperature_enabled': false,
+                'sensor_temperature': 73.0,
+                'sensor_humidity_enabled': false,
+                'sensor_humidity': 0.4,
+                'sensor_pressure_enabled': false,
+                'sensor_pressure': 29.61,
+            };
+            let default_data = {};
+            Object.assign(default_data, data);
+
+            const base_url = '{{ url_for('display.render') }}?';
+
+            const i_dd_key = document.getElementById('dd_key');
+            const i_dd_playlist_screen = document.getElementById('dd_playlist_screen');
+            const i_dd_size = document.getElementById('dd_size');
+            const i_dd_width = document.getElementById('dd_width');
+            const i_dd_height = document.getElementById('dd_height');
+            const i_dd_color_spec = document.getElementById('dd_color_spec');
+            const i_dd_display_spec = document.getElementById('dd_display_spec');
+            const i_dd_sensor_battery_enabled = document.getElementById('dd_sensor_battery_enabled');
+            const i_dd_sensor_battery = document.getElementById('dd_sensor_battery');
+            const i_dd_sensor_temperature_enabled = document.getElementById('dd_sensor_temperature_enabled');
+            const i_dd_sensor_temperature = document.getElementById('dd_sensor_temperature');
+            const i_dd_sensor_humidity_enabled = document.getElementById('dd_sensor_humidity_enabled');
+            const i_dd_sensor_humidity = document.getElementById('dd_sensor_humidity');
+            const i_dd_sensor_pressure_enabled = document.getElementById('dd_sensor_pressure_enabled');
+            const i_dd_sensor_pressure = document.getElementById('dd_sensor_pressure');
+
+            const i_dd_update = document.getElementById('dd_update');
+            const i_dd_reset = document.getElementById('dd_reset');
+
+            const d_dd_iframe_url = document.getElementById('dd_iframe_url');
+            const d_dd_iframe = document.getElementById('dd_iframe');
+            const d_dd_sensor_battery_value = document.getElementById('dd_sensor_battery_value');
+            const d_dd_sensor_temperature_value = document.getElementById('dd_sensor_temperature_value');
+            const d_dd_sensor_humidity_value = document.getElementById('dd_sensor_humidity_value');
+            const d_dd_sensor_pressure_value = document.getElementById('dd_sensor_pressure_value');
+
+            const build_url = function() {
+                let parts = [
+                    ['k', data['key']],
+                    ['w', data['width']],
+                    ['h', data['height']],
+                    ['cs', data['color_spec']],
+                    ['ds', data['display_spec']],
+                ];
+
+                if (data['playlist']) parts.push(['debug_playlist', data['playlist']]);
+                if (data['playlist_screen']) parts.push(['debug_playlist_screen', data['playlist_screen']]);
+                if (data['sensor_battery_enabled']) parts.push(['batt', data['sensor_battery']]);
+                if (data['sensor_temperature_enabled']) parts.push(['temp', data['sensor_temperature']]);
+                if (data['sensor_humidity_enabled']) parts.push(['hum', data['sensor_humidity']]);
+                if (data['sensor_pressure_enabled']) parts.push(['pres', data['sensor_pressure']]);
+
+                return base_url + parts.map(p => p.join('=')).join('&');
+            };
+
+            const update_data_from_form = function() {
+                data['key'] = i_dd_key.value;
+                const pls_data = i_dd_playlist_screen.value.split(';').map(v => v.split('-')[1]).map(v => parseInt(v));
+                data['playlist'] = pls_data[0] || null;
+                data['playlist_screen'] = pls_data[1] || null;
+                if (i_dd_size.value) {
+                    const s_data = i_dd_size.value.split('x').map(v => parseInt(v));
+                    data['width'] = s_data[0];
+                    data['height'] = s_data[1];
+                } else {
+                    data['width'] = parseInt(i_dd_width.value);
+                    data['height'] = parseInt(i_dd_height.value);
+                }
+                data['color_spec'] = i_dd_color_spec.value;
+                data['display_spec'] = i_dd_display_spec.value;
+                data['sensor_battery_enabled'] = i_dd_sensor_battery_enabled.checked;
+                data['sensor_battery'] = parseFloat(i_dd_sensor_battery.value);
+                data['sensor_temperature_enabled'] = i_dd_sensor_temperature_enabled.checked;
+                data['sensor_temperature'] = parseFloat(i_dd_sensor_temperature.value);
+                data['sensor_humidity_enabled'] = i_dd_sensor_humidity_enabled.checked;
+                data['sensor_humidity'] = parseFloat(i_dd_sensor_humidity.value);
+                data['sensor_pressure_enabled'] = i_dd_sensor_pressure_enabled.checked;
+                data['sensor_pressure'] = parseFloat(i_dd_sensor_pressure.value);
+                save_data_to_storage();
+            };
+
+            const update_form_from_data = function() {
+                i_dd_key.value = data['key'];
+                i_dd_playlist_screen.value = 'pl-' + (data['playlist'] || 0) + ';s-' + (data['playlist_screen'] || 0);
+                i_dd_width.value = data['width'];
+                i_dd_height.value = data['height'];
+                i_dd_color_spec.value = data['color_spec'];
+                i_dd_display_spec.value = data['display_spec'];
+                i_dd_sensor_battery_enabled.checked = data['sensor_battery_enabled'];
+                i_dd_sensor_battery.value = data['sensor_battery'];
+                i_dd_sensor_temperature_enabled.checked = data['sensor_temperature_enabled'];
+                i_dd_sensor_temperature.value = data['sensor_temperature'];
+                i_dd_sensor_humidity_enabled.checked = data['sensor_humidity_enabled'];
+                i_dd_sensor_humidity.value = data['sensor_humidity'];
+                i_dd_sensor_pressure_enabled.checked = data['sensor_pressure_enabled'];
+                i_dd_sensor_pressure.value = data['sensor_pressure'];
+
+                d_dd_sensor_battery_value.innerText = (data['sensor_battery'] * 100.0).toFixed(2) + '%';
+                d_dd_sensor_temperature_value.innerHTML = data['sensor_temperature'].toFixed(2) + '&deg;F';
+                d_dd_sensor_humidity_value.innerText = (data['sensor_humidity'] * 100.0).toFixed(2) + '%';
+                d_dd_sensor_pressure_value.innerText = data['sensor_pressure'].toFixed(2) + ' inHg';
+            };
+
+            const load_data_from_storage = function() {
+                let data_str = window.localStorage.getItem('td_demo_data');
+                if (data_str) {
+                    try {
+                        let data_obj = JSON.parse(data_str);
+                        if (data_obj) {
+                            Object.keys(data_obj).forEach(k => data[k] = data_obj[k]);
+                            update_form_from_data();
+                        }
+                    } catch (e) {}
+                }
+            };
+
+            const save_data_to_storage = function() {
+                window.localStorage.setItem('td_demo_data', JSON.stringify(data));
+            };
+
+            const on_input_changed = function() {
+                update_data_from_form();
+                update_form_from_data();
+            };
+
+            const update_screen = function() {
+                const url = build_url();
+                d_dd_iframe_url.value = url;
+                d_dd_iframe.width = data['width'];
+                d_dd_iframe.height = data['height'];
+                d_dd_iframe.src = url;
+            };
+
+            const reset_data = function() {
+                data = {};
+                Object.assign(data, default_data);
+                save_data_to_storage();
+                update_form_from_data();
+            };
+
+            load_data_from_storage();
+            update_form_from_data();
+
+            document.getElementById('demo_config').querySelectorAll('input, select').forEach(i => i.addEventListener('change', on_input_changed));
+            document.getElementById('demo_config').querySelectorAll('input[type=range]').forEach(i => i.addEventListener('input', on_input_changed));
+            i_dd_update.addEventListener('click', update_screen);
+            i_dd_reset.addEventListener('click', reset_data);
+        })();
+    </script>
+{% endblock %}

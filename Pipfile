@@ -16,6 +16,7 @@ pymysql = "*"
 flask-migrate = "*"
 arrow = "*"
 sqlalchemy-utils = "*"
+wtforms-sqlalchemy = "*"
 
 [dev-packages]
 

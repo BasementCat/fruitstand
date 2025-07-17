@@ -23,6 +23,7 @@ def create_app():
         'SQLALCHEMY_DATABASE_URI': os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI'),
         'BOOTSTRAP_SERVE_LOCAL': os.environ.get('FLASK_BOOTSTRAP_SERVE_LOCAL'),
         'SCREEN_IMPORTS': os.environ.get('FLASK_SCREEN_IMPORTS'),
+        'TIMEZONE': os.environ.get('FLASK_TIMEZONE') or 'UTC',
     })
     app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config['SCREEN_IMPORTS'] or '').split(','))))
     app.config['SCREEN_IMPORTS'] += [
@@ -39,10 +40,12 @@ def create_app():
     from app.views import (
         screen as screen_view,
         playlist as playlist_view,
+        display as display_view,
     )
 
     app.register_blueprint(screen_view.bp, url_prefix='/screen')
     app.register_blueprint(playlist_view.bp, url_prefix='/playlist')
+    app.register_blueprint(display_view.bp, url_prefix='/display')
 
     for mod in app.config['SCREEN_IMPORTS']:
         importlib.import_module(mod)

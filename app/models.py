@@ -1,6 +1,7 @@
 from typing import Any, Optional, Union, Dict
 import pickle
 
+from flask import request
 import arrow
 import sqlalchemy_utils as sau
 
@@ -124,7 +125,7 @@ class Display(Base):
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
     name = db.Column(db.UnicodeText(), nullable=False)
     created_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
-    last_seen_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow, onupdate=arrow.utcnow)
+    last_seen_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
     display_spec = db.Column(sau.ChoiceType(choices=[(k, v['name']) for k, v in DISPLAY_SPEC.items()]), nullable=False)
     color_spec = db.Column(sau.ChoiceType(choices=[(k, v['name']) for k, v in COLOR_SPEC.items()]), nullable=False)
     width = db.Column(db.Integer(), nullable=False, default=0)
@@ -133,3 +134,29 @@ class Display(Base):
     playlist = db.relationship(Playlist, backref='displays')
     last_playlist_screen_id = db.Column(db.BigInteger(), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_last_pls_id'))
     last_playlist_screen = db.relationship(PlaylistScreen)
+
+    @classmethod
+    def sync(cls):
+        key = request.args.get('k')
+        if key:
+            update_params = {
+                'last_seen_at': arrow.utcnow(),
+                'display_spec': request.args.get('ds'),
+                'color_spec': request.args.get('cs'),
+                'width': request.args.get('w'),
+                'height': request.args.get('h'),
+            }
+            create_params = dict(update_params)
+            create_params.update({
+                'key': key,
+                'name': key,
+            })
+            display = cls.query.filter(cls.key == key).first()
+            if display:
+                for k, v in update_params.items():
+                    setattr(display, k, v)
+            else:
+                display = cls(**create_params)
+                db.session.add(display)
+            db.session.commit()
+            return display

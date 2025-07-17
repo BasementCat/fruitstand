@@ -1,3 +1,4 @@
+from flask import current_app
 from markupsafe import Markup
 import arrow
 
@@ -55,7 +56,20 @@ def plural(value, singular, plural=None):
     return f'{value} {suffix}'
 
 
-# TODO: dt format - Month date(th), year hour:minute:second am/pm, no markup opt (markup is abbr w/ title=timezone)
+@jfilter()
+def dt(value, format='MMM Do, YYYY h:mm a', no_markup=False):
+    if value is not None:
+        # TODO: user tz
+        tz = current_app.config['TIMEZONE']
+        value = arrow.get(value)
+        value_utc = value.to('UTC')
+        value_utc_s = value_utc.format(format)
+        value_tz = value.to(tz)
+        value_tz_s = value_tz.format(format)
+        if no_markup:
+            return value_tz
+        return Markup(f'<abbr title="{tz} - {value_utc_s} UTC">{value_tz_s}</abbr>')
+    return value
 
 
 @jfilter()
