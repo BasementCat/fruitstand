@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "commander": "^14.0.0",
+    "puppeteer": "^24.14.0"
+  },
+  "scripts": {
+    "render": "node render.js"
+  }
+}

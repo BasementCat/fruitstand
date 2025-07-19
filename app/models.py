@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, Dict
+from typing import Any, Optional, Union, Dict, Tuple
 import pickle
 
 from flask import request
@@ -160,3 +160,30 @@ class Display(Base):
                 db.session.add(display)
             db.session.commit()
             return display
+
+    def get_playlist_screen(self, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Tuple[Optional[Playlist], Optional[PlaylistScreen]]:
+        if playlist_id:
+            playlist = Playlist.query.get(playlist_id)
+        else:
+            playlist = self.playlist
+
+        if not playlist:
+            return None, None
+
+        pls_by_id = {pls.id: pls for pls in playlist.playlist_screens}
+        if not playlist_screen_id and pls_by_id:
+            pls_ids = list(pls_by_id.keys())
+            if self.last_playlist_screen_id:
+                # TODO: time-based
+                try:
+                    idx = pls_ids.index(self.last_playlist_screen_id)
+                    playlist_screen_id = self.last_playlist_screen_id = pls_ids[(idx + 1) % len(pls_ids)]
+                except (ValueError, IndexError):
+                    playlist_screen_id = self.last_playlist_screen_id = pls_ids[0]
+            else:
+                playlist_screen_id = self.last_playlist_screen_id = pls_ids[0]
+            db.session.commit()
+
+        playlist_screen = pls_by_id.get(playlist_screen_id)
+
+        return playlist, playlist_screen
