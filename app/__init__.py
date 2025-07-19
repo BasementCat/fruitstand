@@ -18,14 +18,8 @@ def create_app():
     app = Flask(__name__)
 
     load_dotenv()
-    app.config.from_prefixed_env()
-    app.config.update({
-        'SQLALCHEMY_DATABASE_URI': os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI'),
-        'BOOTSTRAP_SERVE_LOCAL': os.environ.get('FLASK_BOOTSTRAP_SERVE_LOCAL'),
-        'SCREEN_IMPORTS': os.environ.get('FLASK_SCREEN_IMPORTS'),
-        'TIMEZONE': os.environ.get('FLASK_TIMEZONE') or 'UTC',
-    })
-    app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config['SCREEN_IMPORTS'] or '').split(','))))
+    app.config.from_prefixed_env(prefix='FRUITSTAND')
+    app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config.get('SCREEN_IMPORTS') or '').split(','))))
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
     ]

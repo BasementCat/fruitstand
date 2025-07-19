@@ -15,8 +15,13 @@ Simple digital signage, inspired by https://usetrmnl.com/ and https://www.hackst
 
 Create a .env file with at least the following keys:
 
-    FLASK_SECRET_KEY=lkasdjfalsdkjflskjdklsjdflk
-    FLASK_SQLALCHEMY_DATABASE_URI=mysql+pymysql://fruitstand:password@localhost:3306/fruitstand
+    FRUITSTAND_SECRET_KEY=lkasdjfalsdkjflskjdklsjdflk
+    FRUITSTAND_SQLALCHEMY_DATABASE_URI=mysql+pymysql://fruitstand:password@localhost:3306/fruitstand
+
+Configuration may also be passed by setting environment variables.  All supported flask configuration from https://flask.palletsprojects.com/en/stable/config/ are supported (use the prefix FRUITSTAND instead of FLASK).  In addition, the following config options are understood:
+
+* **FRUITSTAND_SCREEN_IMPORTS** - A comma-separated list of modules to import that contain screen definitions
+* **FRUITSTAND_TIMEZONE** - Default timezone for the installation
 
 ## Running
 
