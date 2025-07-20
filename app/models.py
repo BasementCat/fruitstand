@@ -187,3 +187,10 @@ class Display(Base):
         playlist_screen = pls_by_id.get(playlist_screen_id)
 
         return playlist, playlist_screen
+
+
+class Cache(Base):
+    __tablename__ = 'cache'
+    key = db.Column(db.String(128), primary_key=True)
+    expires = db.Column(sau.ArrowType(), nullable=False)
+    data = db.Column(db.LargeBinary(), nullable=False)

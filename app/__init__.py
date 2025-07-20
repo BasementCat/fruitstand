@@ -9,9 +9,11 @@ from dotenv import load_dotenv
 
 from app.lib.screen import Screen
 from app.lib.jinja import apply_jinja_env
+from app.lib.cache import Cache
 
 
 db = SQLAlchemy()
+cache = Cache()
 
 
 def create_app():
@@ -19,6 +21,7 @@ def create_app():
 
     load_dotenv()
     app.config.from_prefixed_env(prefix='FRUITSTAND')
+    app.config['CACHE_DRIVER'] = app.config.get('CACHE_DRIVER', 'filesystem')
     app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config.get('SCREEN_IMPORTS') or '').split(','))))
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
@@ -28,6 +31,7 @@ def create_app():
     db.init_app(app)
     Migrate(app, db)
     apply_jinja_env(app)
+    cache.init_app(app)
 
     from app import models
 

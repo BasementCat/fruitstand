@@ -22,6 +22,11 @@ Configuration may also be passed by setting environment variables.  All supporte
 
 * **FRUITSTAND_SCREEN_IMPORTS** - A comma-separated list of modules to import that contain screen definitions
 * **FRUITSTAND_TIMEZONE** - Default timezone for the installation
+* **CACHE_DRIVER** - Cache driver to use, valid options are:
+    * `filesystem` (default)
+    * `database`
+* **FILESYSTEM_CACHE_DIR** - For filesystem caching, the directory to store data. Must exist.
+* **FILESYSTEM_CACHE_SUBDIR** - Subdirectory within the system temp dir to store data, optional.  Does not need to already exist.
 
 ## Running
 
@@ -30,5 +35,5 @@ Run the following commands to get up and running:
     npm install
     pipenv install
     docker compose up -d
-    flask db migrate
+    flask db upgrade
     flask run
