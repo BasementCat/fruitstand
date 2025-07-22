@@ -188,6 +188,14 @@ class Display(Base):
 
         return playlist, playlist_screen
 
+    def get_context(self):
+        return {
+            'display_spec': self.display_spec,
+            'color_spec': self.color_spec,
+            'width': self.width,
+            'height': self.height,
+        }
+
 
 class Cache(Base):
     __tablename__ = 'cache'

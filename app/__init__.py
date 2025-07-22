@@ -1,13 +1,12 @@
 import os
 import importlib
 
-from flask import Flask
+from flask import Flask, g, request, abort
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 
-from app.lib.screen import Screen
 from app.lib.jinja import apply_jinja_env
 from app.lib.cache import Cache
 
@@ -17,6 +16,8 @@ cache = Cache()
 
 
 def create_app():
+    from app.lib.screen import Screen, ScreenLoadError
+
     app = Flask(__name__)
 
     load_dotenv()
@@ -50,4 +51,13 @@ def create_app():
 
     Screen.install_all(app)
 
+    @app.before_request
+    def load_pls_config():
+        display_id = int(request.args.get('display_id', 0))
+        pls_id = int(request.args.get('playlist_screen_id', 0))
+        if display_id and pls_id:
+            try:
+                g.screen = Screen.load_for_render(display_id=display_id, playlist_screen_id=pls_id)
+            except ScreenLoadError:
+                abort(404)
     return app

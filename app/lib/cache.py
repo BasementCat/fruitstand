@@ -3,9 +3,21 @@ import os
 import tempfile
 import hashlib
 import pickle
+import random
 
 from flask import Flask
 import arrow
+
+
+def make_key_with_args(key, *args, callback=None, **kwargs):
+    argstr = ''.join(map(str, args))
+    kwstr = ''.join(str({k: str(kwargs[k]) for k in sorted(kwargs.keys())}))
+    key = '-'.join(filter(None, (
+        key,
+        callback,
+        hashlib.new('sha256', (argstr + kwstr).encode('utf-8')).hexdigest()
+    )))
+    return key
 
 
 class CacheDriver:
@@ -36,9 +48,10 @@ class Cache:
             self.init_app(app)
 
     def init_app(self, app: Flask):
-        self.driver = CacheDriver._get_driver(app.config.get('CACHE_DRIVER'))
+        self.driver = CacheDriver._get_driver(app.config.get('CACHE_DRIVER'))(app)
 
     def get_or_fetch(self, key: str, expiry: int, callback: Callable[..., Optional[Any]], *args, **kwargs) -> Optional[Any]:
+        key = make_key_with_args(key, *args, callback=callback.__name__, **kwargs)
         res = self.get(key)
         if res is None:
             res = callback(*args, **kwargs)
@@ -122,6 +135,11 @@ class DatabaseDriver(CacheDriver):
         self.CacheModel = CacheModel
 
     def get(self, key: str) -> Optional[Any]:
+        # 1% chance to clean up
+        if random.random() <= 0.01:
+            self.CacheModel.query.filter(self.CacheModel.expires <= arrow.utcnow()).delete()
+            self.db.session.commit()
+
         obj = self.CacheModel.query.get(key)
         if obj:
             if obj.expires > arrow.utcnow():

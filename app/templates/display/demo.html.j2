@@ -223,8 +223,8 @@
                     ['ds', data['display_spec']],
                 ];
 
-                if (data['playlist']) parts.push(['debug_playlist', data['playlist']]);
-                if (data['playlist_screen']) parts.push(['debug_playlist_screen', data['playlist_screen']]);
+                if (data['playlist']) parts.push(['debug_playlist_id', data['playlist']]);
+                if (data['playlist_screen']) parts.push(['debug_playlist_screen_id', data['playlist_screen']]);
                 if (data['sensor_battery_enabled']) parts.push(['batt', data['sensor_battery']]);
                 if (data['sensor_temperature_enabled']) parts.push(['temp', data['sensor_temperature']]);
                 if (data['sensor_humidity_enabled']) parts.push(['hum', data['sensor_humidity']]);

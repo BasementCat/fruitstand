@@ -1,7 +1,17 @@
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, Self
+import json
 
 from flask import Blueprint, Flask, url_for
 from flask_wtf import FlaskForm
+
+from app.models import Display, Config, Playlist, PlaylistScreen
+
+
+class ScreenError(Exception):pass
+class ScreenLoadError(ScreenError):pass
+class DisplayNotFound(ScreenLoadError):pass
+class PlaylistNotFound(ScreenLoadError):pass
+class ScreenNotFound(ScreenLoadError):pass
 
 
 class Screen:
@@ -15,15 +25,16 @@ class Screen:
     config_form: Optional[FlaskForm] = None
     default_config: Dict[str, Any] = {}
 
-    def __init__(self, screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any]):
+    def __init__(self, display: Display, playlist: Playlist, playlist_screen: PlaylistScreen, screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any]):
+        self.display = display
+        self.playlist = playlist
+        self.playlist_screen = playlist_screen
         self.screen_config = dict(screen_config)
         self.playlist_config = dict(playlist_config)
         self.config = {}
         self.config.update(self.screen_config)
         self.config.update(self.playlist_config)
         self.context = dict(context)
-
-        self.setup()
 
     @classmethod
     def install_all(cls, app: Flask):
@@ -47,17 +58,34 @@ class Screen:
     def mount(cls, app: Flask):
         app.register_blueprint(cls.blueprint, url_prefix='/screens/render/' + cls.key)
 
-    def setup(self):
-        pass
+    @classmethod
+    def load_for_render(cls, display_id: Optional[int]=None, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Self:
+        if display_id:
+            display = Display.query.get(display_id)
+        else:
+            display = Display.sync()
+        if not display:
+            raise DisplayNotFound(display_id)
 
-    def preload(self):
-        pass
+        playlist, playlist_screen = display.get_playlist_screen(
+            playlist_id=playlist_id,
+            playlist_screen_id=playlist_screen_id,
+        )
+        if not (playlist and playlist_screen):
+            raise PlaylistNotFound((playlist_id, playlist_screen_id, display.id))
 
-    def load(self):
-        pass
+        screen_cls = cls.get(playlist_screen.screen.key)
+        if not screen_cls:
+            raise ScreenNotFound((playlist_screen.screen.key, playlist.id, playlist_screen.id, display.id))
 
-    def render(self):
-        # get external url to route
-        # ext. headless browser, screenshot
-        # return PIL image?
-        pass
+        playlist_config = Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen)
+        screen_config = Config.load(screen=playlist_screen.screen)
+
+        context = {'metrics': {}}
+        try:
+            context['metrics'] = json.loads(request.args.get('metrics', ''))
+        except:
+            pass
+        context.update(display.get_context())
+
+        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context)

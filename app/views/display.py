@@ -21,33 +21,23 @@ bp = Blueprint('display', __name__)
 
 @bp.route('/render', methods=['GET'])
 def render():
-    display = Display.sync()
-    if not display:
-        abort(404)
-
-    playlist, playlist_screen = display.get_playlist_screen(
-        playlist_id=int(request.args.get('debug_playlist', 0)) or None,
-        playlist_screen_id=int(request.args.get('debug_playlist_screen', 0)) or None,
+    screen = BaseScreen.load_for_render(
+        playlist_id=int(request.args.get('debug_playlist_id', 0)) or None,
+        playlist_screen_id=int(request.args.get('debug_playlist_screen_id', 0)) or None,
     )
-    screen_cls = None
-    if playlist_screen:
-        screen_cls = BaseScreen.get(playlist_screen.screen.key)
-
-    if not (playlist and playlist_screen and screen_cls):
-        abort(404)
 
     args = {
-        'playlist_screen_id': playlist_screen.id,
-        'display_id': display.id,
+        'playlist_screen_id': screen.playlist_screen.id,
+        'display_id': screen.display.id,
         'metrics': json.dumps(Metric.get_metrics()),
     }
 
     # TODO: if display spec is browser, just return the rendered route as-is
-    url = url_for(screen_cls.route, **args, _external=True)
+    url = url_for(screen.route, **args, _external=True)
     path = os.path.join(tempfile.gettempdir(), 'fs-render-' + str(uuid.uuid4()) + '.png')
 
     try:
-        subprocess.check_call(['npm', 'run', 'render', '--', '--url', url, '--width', str(display.width), '--height', str(display.height), '--path', path])
+        subprocess.check_call(['npm', 'run', 'render', '--', '--url', url, '--width', str(screen.display.width), '--height', str(screen.display.height), '--path', path])
         # TODO: load png
         # TODO: convert to color spec
         # TODO: rerender as bmp (direct or send_file)
