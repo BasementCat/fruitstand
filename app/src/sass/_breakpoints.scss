@@ -1,0 +1,16 @@
+@use "sass:map";
+
+$breakpoints: (
+    "t": 240,
+    "xs": 320,
+    "s": 480,
+    "m": 600,
+    "l": 800,
+    "xl": 1024,
+);
+
+@mixin bp ($size) {
+    @media (min-width: #{map.get($breakpoints, $size)}px) {
+        @content;
+    }
+}

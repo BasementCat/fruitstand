@@ -1,0 +1,25 @@
+@use "breakpoints" as *;
+@use "displayhelpers";
+@use "statusbar";
+
+html, body {
+    border: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    font-family: Arial, sans-serif;
+}
+
+body:not(.ds-browser) {
+    -webkit-font-smoothing: none;
+    font-smooth: none;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+
+    #main {
+        flex-grow: 1;
+    }
+}

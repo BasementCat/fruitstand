@@ -39,6 +39,10 @@ class Screen:
         self.context = dict(context)
 
     @classmethod
+    def get_path(cls):
+        return os.path.dirname(inspect.getfile(cls))
+
+    @classmethod
     def install_all(cls, app: Flask):
         queue = [cls]
         while queue:

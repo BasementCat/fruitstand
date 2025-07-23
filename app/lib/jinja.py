@@ -21,9 +21,12 @@ def _j_apply(dest):
 jfilter = _j_apply('filters')
 jglobal = _j_apply('globals')
 
+def apply_jinja_to_env(env):
+    env.filters.update(jinja_env['filters'])
+    env.globals.update(jinja_env['globals'])
+
 def apply_jinja_env(app):
-    app.jinja_env.filters.update(jinja_env['filters'])
-    app.jinja_env.globals.update(jinja_env['globals'])
+    apply_jinja_to_env(app.jinja_env)
 
 
 @jfilter('bool')
@@ -67,7 +70,7 @@ def dt(value, format='MMM Do, YYYY h:mm a', no_markup=False):
         value_tz = value.to(tz)
         value_tz_s = value_tz.format(format)
         if no_markup:
-            return value_tz
+            return value_tz_s
         return Markup(f'<abbr title="{tz} - {value_utc_s} UTC">{value_tz_s}</abbr>')
     return value
 
@@ -104,6 +107,25 @@ def color_spec(value):
         return label(cs['name'], level='success')
     else:
         return label(cs['name'], level='default')
+
+
+@jfilter()
+def fixed(value, d=2):
+    if value is not None:
+        if d:
+            value = f'{{:0.{d}f}}'.format(value)
+        else:
+            value = str(int(value))
+    return value
+
+
+@jfilter()
+def percent(value, d=0):
+    if value is not None:
+        value *= 100
+        value = fixed(value, d=d)
+        value += '%'
+    return value
 
 
 @jglobal()

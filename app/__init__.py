@@ -51,6 +51,10 @@ def create_app():
 
     Screen.install_all(app)
 
+    from app.commands import compile_assets as compile_assets_commands
+
+    app.cli.add_command(compile_assets_commands.cli)
+
     @app.before_request
     def load_pls_config():
         display_id = int(request.args.get('display_id', 0))

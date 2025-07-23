@@ -5,6 +5,10 @@
     "puppeteer": "^24.14.0"
   },
   "scripts": {
-    "render": "node render.js"
+    "render": "node render.js",
+    "sass": "sass"
+  },
+  "devDependencies": {
+    "sass": "^1.89.2"
   }
 }

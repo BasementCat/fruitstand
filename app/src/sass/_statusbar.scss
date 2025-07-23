@@ -1,0 +1,21 @@
+@use "breakpoints" as *;
+
+#statusbar {
+    height: 20px;
+    font-size: 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 1em;
+    border-top: 1px solid #000;
+
+    .statusbar-item {
+        height: 100%;
+
+        img {
+            display: inline-block;
+            vertical-align: middle;
+            height: 100%;
+        }
+    }
+}
