@@ -7,6 +7,7 @@ import subprocess
 
 from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file
 import arrow
+import requests
 
 from app import db
 from app.models import Display, Playlist, Screen
@@ -32,8 +33,10 @@ def render():
         'metrics': json.dumps(Metric.get_metrics()),
     }
 
-    # TODO: if display spec is browser, just return the rendered route as-is
     url = url_for(screen.route, **args, _external=True)
+    if screen.display.display_spec == 'browser':
+        return requests.get(url).content
+
     path = os.path.join(tempfile.gettempdir(), 'fs-render-' + str(uuid.uuid4()) + '.png')
 
     try:
@@ -83,4 +86,5 @@ def demo():
         screens=screens,
         DISPLAY_SPEC=DISPLAY_SPEC,
         COLOR_SPEC=COLOR_SPEC,
+        metric_config=Metric.get_all_demo_config(),
     )

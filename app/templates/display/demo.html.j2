@@ -108,51 +108,32 @@
                 </label>
             </div>
             <div class="col-sm-12 col-md-6">
-                <h3>Sensors</h3>
+                <h3>Metrics</h3>
 
-                <h4>
-                    <label>
-                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_battery_enabled" />
-                        Battery
+                {% for mk, mc in metric_config.items() %}
+                    <h4>
+                        <label>
+                            <input type="checkbox" class="form-check-input" value="1" id="dd_metric_{{ mk }}_enabled" />
+                            {{ mc.title }}
+                        </label>
+                    </h4>
+                    <label class="form-label">
+                        Value: <span id="dd_metric_{{ mk }}_value"></span>
+                        <input
+                            {% if mc.type == 'range' %}
+                                type="range"
+                                class="form-range"
+                            {% else %}
+                                type="number"
+                                class="form-control"
+                            {% endif %}
+                            {% if mc.min is defined %}min="{{ mc.min }}"{% endif %}
+                            {% if mc.max is defined %}max="{{ mc.max }}"{% endif %}
+                            {% if mc.step is defined %}step="{{ mc.step }}"{% endif %}
+                            id="dd_metric_{{ mk }}"
+                        />
                     </label>
-                </h4>
-                <label class="form-label">
-                    Value: <span id="dd_sensor_battery_value"></span>
-                    <input type="range" class="form-range" id="dd_sensor_battery" min="0.0" max="1.0" step="0.01" />
-                </label>
-
-                <h4>
-                    <label>
-                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_temperature_enabled" />
-                        Temperature
-                    </label>
-                </h4>
-                <label class="form-label">
-                    Value: <span id="dd_sensor_temperature_value"></span>
-                    <input type="range" class="form-range" id="dd_sensor_temperature" min="-100.0" max="200.0" step="0.01" />
-                </label>
-
-                <h4>
-                    <label>
-                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_humidity_enabled" />
-                        Humidity
-                    </label>
-                </h4>
-                <label class="form-label">
-                    Value: <span id="dd_sensor_humidity_value"></span>
-                    <input type="range" class="form-range" id="dd_sensor_humidity" min="0.0" max="1.0" step="0.01" />
-                </label>
-
-                <h4>
-                    <label>
-                        <input type="checkbox" class="form-check-input" value="1" id="dd_sensor_pressure_enabled" />
-                        Barometric Pressure
-                    </label>
-                 </h4>
-                <label class="form-label">
-                    Value: <span id="dd_sensor_pressure_value"></span>
-                    <input type="range" class="form-range" id="dd_sensor_pressure" min="20.0" max="40.0" step="0.01" />
-                </label>
+                {% endfor %}
             </div>
             <div class="col-xs-12">
                 <button type="button" class="btn btn-primary" id="dd_update">Update</button>
@@ -166,6 +147,7 @@
     {{ super() }}
     <script>
         (function() {
+            let metric_config = {{ metric_config |tojson }};
             let data = {
                 'key': 'demo-display',
                 'playlist': 0,
@@ -174,19 +156,14 @@
                 'height': 480,
                 'color_spec': '1b',
                 'display_spec': 'static',
-                'sensor_battery_enabled': true,
-                'sensor_battery': 0.82,
-                'sensor_temperature_enabled': false,
-                'sensor_temperature': 73.0,
-                'sensor_humidity_enabled': false,
-                'sensor_humidity': 0.4,
-                'sensor_pressure_enabled': false,
-                'sensor_pressure': 29.61,
+                'metrics': {},
             };
+
+            Object.keys(metric_config).forEach(k => data.metrics[k] = {'enabled': metric_config[k].enabled ? true : false, 'value': metric_config[k].default || 0});
             let default_data = {};
             Object.assign(default_data, data);
 
-            const base_url = '{{ url_for('display.render') }}?';
+            const base_url = '{{ url_for('display.render', _external=True) }}?';
 
             const i_dd_key = document.getElementById('dd_key');
             const i_dd_playlist_screen = document.getElementById('dd_playlist_screen');
@@ -195,24 +172,21 @@
             const i_dd_height = document.getElementById('dd_height');
             const i_dd_color_spec = document.getElementById('dd_color_spec');
             const i_dd_display_spec = document.getElementById('dd_display_spec');
-            const i_dd_sensor_battery_enabled = document.getElementById('dd_sensor_battery_enabled');
-            const i_dd_sensor_battery = document.getElementById('dd_sensor_battery');
-            const i_dd_sensor_temperature_enabled = document.getElementById('dd_sensor_temperature_enabled');
-            const i_dd_sensor_temperature = document.getElementById('dd_sensor_temperature');
-            const i_dd_sensor_humidity_enabled = document.getElementById('dd_sensor_humidity_enabled');
-            const i_dd_sensor_humidity = document.getElementById('dd_sensor_humidity');
-            const i_dd_sensor_pressure_enabled = document.getElementById('dd_sensor_pressure_enabled');
-            const i_dd_sensor_pressure = document.getElementById('dd_sensor_pressure');
 
             const i_dd_update = document.getElementById('dd_update');
             const i_dd_reset = document.getElementById('dd_reset');
 
             const d_dd_iframe_url = document.getElementById('dd_iframe_url');
             const d_dd_iframe = document.getElementById('dd_iframe');
-            const d_dd_sensor_battery_value = document.getElementById('dd_sensor_battery_value');
-            const d_dd_sensor_temperature_value = document.getElementById('dd_sensor_temperature_value');
-            const d_dd_sensor_humidity_value = document.getElementById('dd_sensor_humidity_value');
-            const d_dd_sensor_pressure_value = document.getElementById('dd_sensor_pressure_value');
+
+            let metric_els = {};
+            Object.keys(metric_config).forEach(k => {
+                metric_els[k] = {
+                    'enabled': document.getElementById('dd_metric_' + k + '_enabled'),
+                    'value': document.getElementById('dd_metric_' + k),
+                    'display': document.getElementById('dd_metric_' + k + '_value'),
+                };
+            });
 
             const build_url = function() {
                 let parts = [
@@ -225,10 +199,11 @@
 
                 if (data['playlist']) parts.push(['debug_playlist_id', data['playlist']]);
                 if (data['playlist_screen']) parts.push(['debug_playlist_screen_id', data['playlist_screen']]);
-                if (data['sensor_battery_enabled']) parts.push(['batt', data['sensor_battery']]);
-                if (data['sensor_temperature_enabled']) parts.push(['temp', data['sensor_temperature']]);
-                if (data['sensor_humidity_enabled']) parts.push(['hum', data['sensor_humidity']]);
-                if (data['sensor_pressure_enabled']) parts.push(['pres', data['sensor_pressure']]);
+                Object.keys(data.metrics).forEach(k => {
+                    if (data.metrics[k].enabled) {
+                        parts.push([metric_config[k].param, data.metrics[k].value]);
+                    }
+                });
 
                 return base_url + parts.map(p => p.join('=')).join('&');
             };
@@ -248,14 +223,12 @@
                 }
                 data['color_spec'] = i_dd_color_spec.value;
                 data['display_spec'] = i_dd_display_spec.value;
-                data['sensor_battery_enabled'] = i_dd_sensor_battery_enabled.checked;
-                data['sensor_battery'] = parseFloat(i_dd_sensor_battery.value);
-                data['sensor_temperature_enabled'] = i_dd_sensor_temperature_enabled.checked;
-                data['sensor_temperature'] = parseFloat(i_dd_sensor_temperature.value);
-                data['sensor_humidity_enabled'] = i_dd_sensor_humidity_enabled.checked;
-                data['sensor_humidity'] = parseFloat(i_dd_sensor_humidity.value);
-                data['sensor_pressure_enabled'] = i_dd_sensor_pressure_enabled.checked;
-                data['sensor_pressure'] = parseFloat(i_dd_sensor_pressure.value);
+                Object.keys(metric_config).forEach(k => {
+                    data.metrics[k] = {
+                        'enabled': metric_els[k].enabled.checked,
+                        'value': metric_els[k].value.value,
+                    };
+                });
                 save_data_to_storage();
             };
 
@@ -266,19 +239,16 @@
                 i_dd_height.value = data['height'];
                 i_dd_color_spec.value = data['color_spec'];
                 i_dd_display_spec.value = data['display_spec'];
-                i_dd_sensor_battery_enabled.checked = data['sensor_battery_enabled'];
-                i_dd_sensor_battery.value = data['sensor_battery'];
-                i_dd_sensor_temperature_enabled.checked = data['sensor_temperature_enabled'];
-                i_dd_sensor_temperature.value = data['sensor_temperature'];
-                i_dd_sensor_humidity_enabled.checked = data['sensor_humidity_enabled'];
-                i_dd_sensor_humidity.value = data['sensor_humidity'];
-                i_dd_sensor_pressure_enabled.checked = data['sensor_pressure_enabled'];
-                i_dd_sensor_pressure.value = data['sensor_pressure'];
-
-                d_dd_sensor_battery_value.innerText = (data['sensor_battery'] * 100.0).toFixed(2) + '%';
-                d_dd_sensor_temperature_value.innerHTML = data['sensor_temperature'].toFixed(2) + '&deg;F';
-                d_dd_sensor_humidity_value.innerText = (data['sensor_humidity'] * 100.0).toFixed(2) + '%';
-                d_dd_sensor_pressure_value.innerText = data['sensor_pressure'].toFixed(2) + ' inHg';
+                Object.keys(metric_config).forEach(k => {
+                    metric_els[k].enabled.checked = data.metrics[k].enabled;
+                    metric_els[k].value.value = data.metrics[k].value;
+                    // TODO: do this better - handle alt. datatypes
+                    let v = data.metrics[k].value;
+                    v *= (metric_config[k].multiply || 1);
+                    v = v.toFixed(2);
+                    v += (metric_config[k].suffix || '');
+                    metric_els[k].display.innerHTML = v;
+                });
             };
 
             const load_data_from_storage = function() {

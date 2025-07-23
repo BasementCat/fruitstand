@@ -7,6 +7,7 @@ class Metric:
     param = None
     key = None
     datatype = float
+    title = None
 
     def __init__(self, metrics):
         self.metrics = metrics
@@ -39,6 +40,14 @@ class Metric:
         return value
 
     @classmethod
+    def get_title(cls):
+        return cls.title or cls.__name__
+
+    @classmethod
+    def get_demo_config(self):
+        pass
+
+    @classmethod
     def get_metric_classes(cls):
         if cls._all_metrics is None:
             cls._all_metrics = []
@@ -58,6 +67,15 @@ class Metric:
             out.update(met())
         return out
 
+    @classmethod
+    def get_all_demo_config(cls):
+        out = {}
+        for mc in cls.get_metric_classes():
+            out[mc.param] = {'param': mc.param, 'datatype': mc.datatype.__name__, 'title': mc.get_title()}
+            out[mc.param].update(mc.get_demo_config() or {})
+        return out
+
+
 
 class Battery(Metric):
     param = 'batt'
@@ -76,6 +94,18 @@ class Battery(Metric):
                     'c': bool(int(request.args.get('batt_chg', 0))),
                 }
             }
+
+    @classmethod
+    def get_demo_config(cls):
+        return {
+            'type': 'range',
+            # TODO: alt. inputs
+            'min': 3.4,
+            'max': 4.2,
+            'step': 0.01,
+            'default': 3.7,
+            'enabled': True,
+        }
 
 
 class BaseTemperature(Metric):
@@ -97,6 +127,17 @@ class BaseTemperature(Metric):
                 temps['c'] = ((temps['f'] - 32) * 5.0) / 9.0
             return {(self.key or self.param): temps}
 
+    @classmethod
+    def get_demo_config(cls):
+        return {
+            'type': 'range',
+            'min': -50,
+            'max': 140,
+            'step': 0.1,
+            'default': 80,
+            'enabled': True,
+        }
+
 
 class InternalTemperature(BaseTemperature):
     param = 'i_temp'
@@ -107,7 +148,16 @@ class ExternalTemperature(BaseTemperature):
 
 
 class BaseHumidity(Metric):
-    pass
+    @classmethod
+    def get_demo_config(cls):
+        return {
+            'type': 'range',
+            'min': 0,
+            'max': 1,
+            'step': 0.001,
+            'default': 0.45,
+            'enabled': True,
+        }
 
 class InternalHumidity(BaseHumidity):
     param = 'i_hum'
@@ -117,7 +167,16 @@ class ExternalHumidity(BaseHumidity):
     param = 'e_hum'
 
 class BasePressure(Metric):
-    pass
+    @classmethod
+    def get_demo_config(cls):
+        return {
+            'type': 'range',
+            'min': 20,
+            'max': 40,
+            'step': 0.1,
+            'default': 29.61,
+            'enabled': True,
+        }
 
 class InternalPressure(BasePressure):
     param = 'i_pres'
@@ -150,3 +209,14 @@ class Wifi(Metric):
                     'b': bars,
                 }
             }
+
+    @classmethod
+    def get_demo_config(cls):
+        return {
+            'type': 'range',
+            'min': -100,
+            'max': 0,
+            'step': 1,
+            'default': -69,
+            'enabled': True,
+        }

@@ -17,8 +17,10 @@ flask-migrate = "*"
 arrow = "*"
 sqlalchemy-utils = "*"
 wtforms-sqlalchemy = "*"
+requests = "*"
 
 [dev-packages]
+pudb = "*"
 
 [requires]
 python_version = "3.13"
