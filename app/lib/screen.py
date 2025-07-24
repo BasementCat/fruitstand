@@ -3,10 +3,12 @@ import json
 import os
 import inspect
 
-from flask import Blueprint, Flask, url_for, request
+from flask import Blueprint, Flask, url_for, request, current_app
 from flask_wtf import FlaskForm
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.models import Display, Config, Playlist, PlaylistScreen
+from app.lib.jinja import apply_jinja_to_env
 
 
 class ScreenError(Exception):pass
@@ -37,6 +39,28 @@ class Screen:
         self.config.update(self.screen_config)
         self.config.update(self.playlist_config)
         self.context = dict(context)
+
+        loader = FileSystemLoader([
+            os.path.join(current_app.root_path, current_app.template_folder, 'screen_templates'),
+            os.path.join(self.get_path(), 'templates'),
+        ])
+        self.jinja_env = Environment(
+            loader=loader,
+            autoescape=select_autoescape()
+        )
+        apply_jinja_to_env(self.jinja_env)
+
+    def render_template(self, template_name, **kwargs):
+        kwargs.update({
+            'screen': self,
+            'display': self.display,
+            'context': self.context,
+            'url_for': current_app.url_for,
+        })
+        template = self.jinja_env.get_template(template_name)
+        return template.render(**kwargs)
+
+
 
     @classmethod
     def get_path(cls):
