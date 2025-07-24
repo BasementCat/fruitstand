@@ -1,0 +1,20 @@
+{% extends "screen_templates/base.html.j2" %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('fruitstand_zenquotes.static', filename='css/zen_quotes.css') }}" />
+{% endblock %}
+
+{% block content %}
+    <div id="quote">
+        <blockquote>
+            <img src="{{ url_for('fruitstand_zenquotes.static', filename='images/quote.png') }}" />
+            <div class="container">
+                <div class="quote">{{ quote.q }}</div>
+                <footer>
+                    &mdash; {{ quote.a }}
+                </footer>
+            </div>
+        </blockquote>
+    </div>
+{% endblock %}

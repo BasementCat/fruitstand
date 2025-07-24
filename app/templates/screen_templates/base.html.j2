@@ -12,7 +12,7 @@
         </div>
         <div id="statusbar">
             {% block statusbar %}
-                <div class="statusbar-item">
+                <div class="statusbar-item d-s-inline-block">
                     <img src="{{ url_for('static', filename='images/wi-cloud-refresh.svg') }}">
                     {{ now() |dt(no_markup=True) }}
                 </div>
