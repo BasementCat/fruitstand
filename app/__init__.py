@@ -27,6 +27,8 @@ def create_app():
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
     ]
+    if app.debug:
+        app.config['SCREEN_IMPORTS'].append('app.screens.color_test')
 
     Bootstrap(app)
     db.init_app(app)

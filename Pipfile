@@ -18,6 +18,7 @@ arrow = "*"
 sqlalchemy-utils = "*"
 wtforms-sqlalchemy = "*"
 requests = "*"
+pillow = "*"
 
 [dev-packages]
 pudb = "*"

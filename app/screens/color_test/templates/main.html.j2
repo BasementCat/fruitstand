@@ -1,0 +1,21 @@
+{% extends "base.html.j2" %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('fruitstand_colortest.static', filename='css/color_test.css') }}" />
+{% endblock %}
+
+{% block content %}
+    <div id="colortest">
+        <p>Monochrome</p>
+        <div class="color-bar bw"></div>
+        <p>Monochrome Gradient</p>
+        <div class="color-bar bw-gradient"></div>
+        <p>7 Colors</p>
+        <div class="color-bar col7"></div>
+        <p>8 Colors</p>
+        <div class="color-bar col8"></div>
+        <p>Gradient</p>
+        <div class="color-bar col-gradient"></div>
+    </div>
+{% endblock %}

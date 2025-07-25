@@ -4,6 +4,7 @@ import json
 import uuid
 import urllib.parse
 import subprocess
+from io import BytesIO
 
 from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file
 import arrow
@@ -15,6 +16,7 @@ from app.constants import DISPLAY_SPEC, COLOR_SPEC
 from app.forms import DisplayEditForm
 from app.lib.metric import Metric
 from app.lib.screen import Screen as BaseScreen
+from app.lib.image import convert_colors
 
 
 bp = Blueprint('display', __name__)
@@ -34,23 +36,27 @@ def render():
     }
 
     url = url_for(screen.route, **args, _external=True)
+    headers = {'X-Refresh-Time': screen.playlist_screen.refresh_interval or screen.playlist.default_refresh_interval}
     if screen.display.display_spec == 'browser':
-        return requests.get(url).content
-
-    path = os.path.join(tempfile.gettempdir(), 'fs-render-' + str(uuid.uuid4()) + '.png')
-
-    try:
-        subprocess.check_call(['npm', 'run', 'render', '--', '--url', url, '--width', str(screen.display.width), '--height', str(screen.display.height), '--path', path])
-        # TODO: load png
-        # TODO: convert to color spec
-        # TODO: rerender as bmp (direct or send_file)
-        # TODO: add refresh interval header
-        return send_file(path)
-    finally:
-        if os.path.exists(path):
-            os.unlink(path)
+        payload = requests.get(url).content
+        headers.update({'Content-length': len(payload), 'Content-type': 'text/html'})
+    else:
+        path = os.path.join(tempfile.gettempdir(), 'fs-render-' + str(uuid.uuid4()) + '.png')
+        try:
+            subprocess.check_call(['npm', 'run', 'render', '--', '--url', url, '--width', str(screen.display.width), '--height', str(screen.display.height), '--path', path])
+            im = convert_colors(screen.display.color_spec, path)
+            out = BytesIO()
+            im.save(out, 'bmp')
+            l = out.tell()
+            out.seek(0)
+            payload = out
+            headers.update({'Content-length': l, 'Content-type': 'image/bmp'})
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
 
     # TODO: error handling - ideally render pretty error screen but worst case text/plain
+    return payload, headers
 
 
 @bp.route('/', methods=['GET'])
