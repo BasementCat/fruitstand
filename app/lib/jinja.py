@@ -60,18 +60,18 @@ def plural(value, singular, plural=None):
 
 
 @jfilter()
-def dt(value, format='MMM Do, YYYY h:mm a', no_markup=False):
+def dt(value, format='MMM Do, YYYY h:mm a', timezone=None, no_markup=False):
     if value is not None:
         # TODO: user tz
-        tz = current_app.config['TIMEZONE']
+        timezone = timezone or current_app.config['TIMEZONE']
         value = arrow.get(value)
         value_utc = value.to('UTC')
         value_utc_s = value_utc.format(format)
-        value_tz = value.to(tz)
+        value_tz = value.to(timezone)
         value_tz_s = value_tz.format(format)
         if no_markup:
             return value_tz_s
-        return Markup(f'<abbr title="{tz} - {value_utc_s} UTC">{value_tz_s}</abbr>')
+        return Markup(f'<abbr title="{timezone} - {value_utc_s} UTC">{value_tz_s}</abbr>')
     return value
 
 

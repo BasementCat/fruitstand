@@ -26,6 +26,7 @@ def create_app():
     app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config.get('SCREEN_IMPORTS') or '').split(','))))
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
+        'app.screens.openweather',
     ]
     if app.debug:
         app.config['SCREEN_IMPORTS'].append('app.screens.color_test')
@@ -33,7 +34,6 @@ def create_app():
     Bootstrap(app)
     db.init_app(app)
     Migrate(app, db)
-    apply_jinja_env(app)
     cache.init_app(app)
 
     from app import models
@@ -56,6 +56,9 @@ def create_app():
     from app.commands import compile_assets as compile_assets_commands
 
     app.cli.add_command(compile_assets_commands.cli)
+
+    # Do this last; lets screens add jinja stuff
+    apply_jinja_env(app)
 
     @app.before_request
     def load_pls_config():

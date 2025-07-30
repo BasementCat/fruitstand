@@ -1,14 +1,26 @@
 {
   "type": "module",
   "dependencies": {
+    "chart.js": "^4.5.0",
     "commander": "^14.0.0",
     "puppeteer": "^24.14.0"
   },
+  "targets": {
+    "openweather": {
+      "source": "app/screens/openweather/src/js/openweather.js",
+      "distDir": "app/screens/openweather/static/js"
+    }
+  },
   "scripts": {
     "render": "node render.js",
-    "sass": "sass"
+    "sass": "sass",
+    "js:watch:prod": "parcel watch --no-source-maps",
+    "js:watch:dev": "parcel watch",
+    "js:build:prod": "parcel build --no-source-maps",
+    "js:build:dev": "parcel build"
   },
   "devDependencies": {
+    "parcel": "^2.15.4",
     "sass": "^1.89.2"
   }
 }

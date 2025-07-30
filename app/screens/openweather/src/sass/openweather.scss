@@ -1,0 +1,65 @@
+@use "breakpoints" as *;
+
+#weather {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    // dfl: temp\ninternals
+    // s: temp, forecast, \n internals, internals;
+    // m ???
+
+    .current {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        text-align: center;
+    }
+
+    .loc-forecast {
+        .location, .date {
+            float: right;
+            clear: both;
+        }
+        .forecast {
+            width: 100%;
+            clear: both;
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+        }
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+
+        .stats-item {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            grid-template-rows: 1fr 2fr;
+            grid-template-areas: "icon title"
+                                 "icon value";
+
+            .icon {
+                grid-area: icon;
+            }
+            .title {
+                grid-area: title;
+            }
+            .details {
+                grid-area: value;
+            }
+        }
+    }
+
+    .graph, .graph #graph-data {
+        width: 100%;
+        height: 100%;
+    }
+
+    @include bp('l') {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        grid-template-rows: 1fr 2fr;
+    }
+}
