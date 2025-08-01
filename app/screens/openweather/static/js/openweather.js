@@ -692,6 +692,7 @@ var _autoDefault = parcelHelpers.interopDefault(_auto);
         c.putImageData(b, 1, 1);
         return c.createPattern(shape, 'repeat');
     };
+    (0, _autoDefault.default).defaults.font.size = 14;
     new (0, _autoDefault.default)(document.getElementById('graph-data'), {
         type: 'bar',
         options: {

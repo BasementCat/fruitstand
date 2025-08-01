@@ -13,127 +13,146 @@
 
 {% block content %}
     <div id="weather">
-        <div class="current">
-            <img src="{{ get_conditions_image(forecast.current) }}" class="icon" />
-            <div class="details">
-                <div class="temp">
-                    <span class="temp-number">{{ forecast.current.temp |fixed(d=0) }}</span>
-                    <span class="temp-suffix">&deg;{{ screen.config.units |weather_suffix('temp') }}</span>
-                </div>
-                <div class="feelslike">
-                    Feels Like {{ forecast.current.feels_like |fixed(d=0) }}&deg;
-                </div>
-            </div>
-        </div>
-
-        <div class="loc-forecast">
-            <div class="location">{{ forecast.timezone }}</div>
-            <div class="date">{{ forecast.current.dt |dt(format='dddd, MMMM D', timezone=forecast.timezone, no_markup=True) }}</div>
-            <div class="forecast">
-                {# first day in daily may be today @ 1pm, might change at that time #}
-                {% for day in forecast.daily[:5] %}
-                    <div class="forecast-item">
-                        <div class="day">{{ day.dt |dt(format='ddd', timezone=forecast.timezone, no_markup=True) }}</div>
-                        <img src="{{ get_conditions_image(day) }}" class="icon" />
-                        <div class="details">
-                            <span class="temp">{{ day.temp.max |fixed(d=0) }}&deg;</span>
-                            |
-                            <span class="temp">{{ day.temp.min |fixed(d=0) }}&deg;</span>
-                        </div>
+        <div class="row-1">
+            <div class="current">
+                <img src="{{ get_conditions_image(forecast.current) }}" class="icon" />
+                <div class="details">
+                    <div class="temp">
+                        <span class="temp-number">{{ forecast.current.temp |fixed(d=0) }}</span>
+                        <span class="temp-suffix">&deg;{{ screen.config.units |weather_suffix('temp') }}</span>
                     </div>
-                {% endfor %}
+                    <div class="feelslike">
+                        Feels Like {{ forecast.current.feels_like |fixed(d=0) }}&deg;
+                    </div>
+                </div>
+            </div>
+
+            <div class="loc-forecast">
+                <div class="location">{{ forecast.timezone }}</div>
+                <div class="date">{{ forecast.current.dt |dt(format='dddd, MMMM D', timezone=forecast.timezone, no_markup=True) }}</div>
+                <div class="forecast">
+                    {# first day in daily may be today @ 1pm, might change at that time #}
+                    {% for day in forecast.daily[:5] %}
+                        <div class="forecast-item">
+                            <div class="day">{{ day.dt |dt(format='ddd', timezone=forecast.timezone, no_markup=True) }}</div>
+                            <img src="{{ get_conditions_image(day) }}" class="icon" />
+                            <div class="details">
+                                <span class="temp">{{ day.temp.max |fixed(d=0) }}&deg;</span>
+                                |
+                                <span class="temp">{{ day.temp.min |fixed(d=0) }}&deg;</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
+        <div class="row-2">
+            <div class="stats">
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-sunrise.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Sunrise</span>
+                        <span class="details">{{ forecast.current.sunrise |dt(format='h:mma', timezone=forecast.timezone, no_markup=True) }}</span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-sunset.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Sunset</span>
+                        <span class="details">{{ forecast.current.sunset |dt(format='h:mma', timezone=forecast.timezone, no_markup=True) }}</span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-strong-wind.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Wind</span>
+                        <span class="details">
+                            <img src="{{ url_for('fruitstand_openweather.static', filename='images/wind_direction_meteorological_' ~ forecast.current.wind_deg ~ 'deg.svg') }}" class="icon" />
+                            {{ forecast.current.wind_speed |fixed(d=0) }}
+                            <span class="suffix">{{ screen.config.units |weather_suffix('speed') }}</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-humidity.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Humidity</span>
+                        <span class="details">{{ forecast.current.humidity |fixed(d=0) }}%</span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-day-sunny.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">UV Index</span>
+                        <span class="details">
+                            {{ forecast.current.uvi |fixed(d=1) }}
+                            <span class="suffix">
+                                {% if forecast.current.uvi >= 11 %}Extreme
+                                {% elif forecast.current.uvi >= 8 %}Very High
+                                {% elif forecast.current.uvi >= 6 %}High
+                                {% elif forecast.current.uvi >= 3 %}Moderate
+                                {% else %}Low
+                                {% endif %}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-barometer.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Pressure</span>
+                        <span class="details">{{ forecast.current.pressure |weather_convert(screen.config.units, 'pressure') }}</span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/air_filter.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Air Quality Index</span>
+                        <span class="details">
+                            {{ air_pollution.list.0.main.aqi |fixed(d=0) }}
+                            <span class="suffix">
+                                {% if air_pollution.list.0.main.aqi > 300 %}Hazardous
+                                {% elif air_pollution.list.0.main.aqi > 200 %}Very Unhealthy
+                                {% elif air_pollution.list.0.main.aqi > 150 %}Unhealthy
+                                {% elif air_pollution.list.0.main.aqi > 100 %}Sensitive Unhealthy
+                                {% elif air_pollution.list.0.main.aqi > 50 %}Moderate
+                                {% else %}Good
+                                {% endif %}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                <div class="stats-item">
+                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/visibility_icon.svg') }}" class="icon" />
+                    <div class="stats-data">
+                        <span class="title">Visibility</span>
+                        <span class="details">
+                            {{ forecast.current.visibility |weather_convert(screen.config.units, 'distance') }}
+                        </span>
+                    </div>
+                </div>
+                {# TODO: figure this out, probably need imperial/metric from the display
+                <div class="stats-item">
+                    <div class="icon">TODO: in temperature icon</div>
+                    <span class="title">Temperature</span>
+                    <span class="details">in temperature</span>
+                </div>
+                <div class="stats-item">
+                    <div class="icon">TODO: in humidity icon</div>
+                    <span class="title">Humidity</span>
+                    <span class="details">in humidity</span>
+                </div>
+                <div class="stats-item">
+                    <div class="icon">TODO: in pressure icon</div>
+                    <span class="title">Pressure</span>
+                    <span class="details">in pressure</span>
+                </div>
+                #}
+            </div>
 
-        <div class="stats">
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-sunrise.svg') }}" class="icon" />
-                <span class="title">Sunrise</span>
-                <span class="details">{{ forecast.current.sunrise |dt(format='h:mma', timezone=forecast.timezone, no_markup=True) }}</span>
+            <div class="graph">
+                <canvas id="graph-data"></canvas>
             </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-sunset.svg') }}" class="icon" />
-                <span class="title">Sunset</span>
-                <span class="details">{{ forecast.current.sunset |dt(format='h:mma', timezone=forecast.timezone, no_markup=True) }}</span>
-            </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-strong-wind.svg') }}" class="icon" />
-                <span class="title">Wind</span>
-                <span class="details">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wind_direction_meteorological_' ~ forecast.current.wind_deg ~ 'deg.svg') }}" class="icon" />
-                    {{ forecast.current.wind_speed |fixed(d=0) }}
-                    <span class="suffix">{{ screen.config.units |weather_suffix('speed') }}
-                </span>
-            </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-humidity.svg') }}" class="icon" />
-                <span class="title">Humidity</span>
-                <span class="details">{{ forecast.current.humidity |fixed(d=0) }}%</span>
-            </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-day-sunny.svg') }}" class="icon" />
-                <span class="title">UV Index</span>
-                <span class="details">
-                    {{ forecast.current.uvi |fixed(d=1) }}
-                    <span class="suffix">
-                        {% if forecast.current.uvi >= 11 %}Extreme
-                        {% elif forecast.current.uvi >= 8 %}Very High
-                        {% elif forecast.current.uvi >= 6 %}High
-                        {% elif forecast.current.uvi >= 3 %}Moderate
-                        {% else %}Low
-                        {% endif %}
-                    </span>
-                </span>
-            </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-barometer.svg') }}" class="icon" />
-                <span class="title">Pressure</span>
-                <span class="details">{{ forecast.current.pressure |weather_convert(screen.config.units, 'pressure') }}</span>
-            </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/air_filter.svg') }}" class="icon" />
-                <span class="title">Air Quality Index</span>
-                <span class="details">
-                    {{ air_pollution.list.0.main.aqi |fixed(d=0) }}
-                    <span class="suffix">
-                        {% if air_pollution.list.0.main.aqi > 300 %}Hazardous
-                        {% elif air_pollution.list.0.main.aqi > 200 %}Very Unhealthy
-                        {% elif air_pollution.list.0.main.aqi > 150 %}Unhealthy
-                        {% elif air_pollution.list.0.main.aqi > 100 %}Sensitive Unhealthy
-                        {% elif air_pollution.list.0.main.aqi > 50 %}Moderate
-                        {% else %}Good
-                        {% endif %}
-                    </span>
-                </span>
-            </div>
-            <div class="stats-item">
-                <img src="{{ url_for('fruitstand_openweather.static', filename='images/visibility_icon.svg') }}" class="icon" />
-                <span class="title">Visibility</span>
-                <span class="details">
-                    {{ forecast.current.visibility |weather_convert(screen.config.units, 'distance') }}
-                </span>
-            </div>
-            {# TODO: figure this out, probably need imperial/metric from the display
-            <div class="stats-item">
-                <div class="icon">TODO: in temperature icon</div>
-                <span class="title">Temperature</span>
-                <span class="details">in temperature</span>
-            </div>
-            <div class="stats-item">
-                <div class="icon">TODO: in humidity icon</div>
-                <span class="title">Humidity</span>
-                <span class="details">in humidity</span>
-            </div>
-            <div class="stats-item">
-                <div class="icon">TODO: in pressure icon</div>
-                <span class="title">Pressure</span>
-                <span class="details">in pressure</span>
-            </div>
-            #}
-        </div>
-
-        <div class="graph">
-            <canvas id="graph-data"></canvas>
         </div>
     </div>
 {% endblock %}

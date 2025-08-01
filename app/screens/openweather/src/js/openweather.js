@@ -28,6 +28,8 @@ import Chart from 'chart.js/auto'
     return c.createPattern(shape, 'repeat')
   }
 
+  Chart.defaults.font.size = 14;
+
   new Chart(
     document.getElementById('graph-data'),
     {

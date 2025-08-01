@@ -4,6 +4,8 @@
     display: block;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
+    padding: 0.5em;
 
     // dfl: temp\ninternals
     // s: temp, forecast, \n internals, internals;
@@ -13,6 +15,16 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         text-align: center;
+        align-items: center;
+
+        .details {
+            .temp {
+                .temp-number {
+                    font-size: 6em;
+                    // font-weight: bold;
+                }
+            }
+        }
     }
 
     .loc-forecast {
@@ -20,34 +32,68 @@
             float: right;
             clear: both;
         }
+        .location {
+            font-size: 1.55em;
+        }
+        .date {
+            font-size: 1.2em;
+        }
         .forecast {
             width: 100%;
             clear: both;
             display: flex;
             justify-content: space-between;
             text-align: center;
+
+            .day {
+                font-size: 1.1em;
+            }
+            .icon {
+                margin: 0.5em 0;
+                height: 3em;
+                width: auto;
+                aspect-ratio: 1;
+                object-fit: contain;
+            }
+            .details {
+                font-size: 0.85em;
+            }
         }
     }
 
     .stats {
         display: grid;
+        width: 100%;
+        height: 100%;
         grid-template-columns: repeat(2, 1fr);
 
         .stats-item {
             display: grid;
             grid-template-columns: 1fr 3fr;
-            grid-template-rows: 1fr 2fr;
-            grid-template-areas: "icon title"
-                                 "icon value";
 
             .icon {
-                grid-area: icon;
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+                object-fit: contain;
             }
             .title {
-                grid-area: title;
+                display: block;
+                font-size: 0.85em;
+                // line-height: 0.85em;
             }
             .details {
-                grid-area: value;
+                font-size: 1.2em;
+                // line-height: 1.2em;
+
+                .icon {
+                    width: 1em;
+                }
+
+                .suffix {
+                    font-size: 0.8em;
+                    // line-height: 0.8em;
+                }
             }
         }
     }
@@ -59,7 +105,15 @@
 
     @include bp('l') {
         display: grid;
-        grid-template-columns: 1fr 2fr;
-        grid-template-rows: 1fr 2fr;
+        grid-template-rows: 2fr 3fr;
+
+        .row-1 {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+        }
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+        }
     }
 }
