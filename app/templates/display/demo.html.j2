@@ -24,6 +24,14 @@
             display: inline-block;
             width: 5em;
         }
+        #demo_config .metric-container {
+            margin-bottom: 1.5em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #demo_config .metric-container h4 label {
+            font-size: 1.5em;
+        }
     </style>
 {% endblock %}
 
@@ -110,34 +118,104 @@
             <div class="col-sm-12 col-md-6">
                 <h3>Metrics</h3>
 
-                {% for mk, mc in metric_config.items() %}
-                    <h4>
-                        <label>
-                            <input type="checkbox" class="form-check-input" value="1" id="dd_metric_{{ mk }}_enabled" />
-                            {{ mc.title }}
-                        </label>
-                    </h4>
-                    <label class="form-label">
-                        Value: <span id="dd_metric_{{ mk }}_value"></span>
-                        <input
-                            {% if mc.type == 'range' %}
-                                type="range"
-                                class="form-range"
-                            {% else %}
-                                type="number"
-                                class="form-control"
-                            {% endif %}
-                            {% if mc.min is defined %}min="{{ mc.min }}"{% endif %}
-                            {% if mc.max is defined %}max="{{ mc.max }}"{% endif %}
-                            {% if mc.step is defined %}step="{{ mc.step }}"{% endif %}
-                            id="dd_metric_{{ mk }}"
-                        />
-                    </label>
-                {% endfor %}
+                <div class="row">
+                    {% for metric_key, (metric_name, metric_param, inputs) in metric_inputs.items() %}
+                        <div class="col-md-12 col-lg-6 metric-container" id="dd_metric_{{ metric_key }}_container">
+                            <h4>
+                                <label>
+                                    <input type="checkbox" class="form-check-input" value="1" id="dd_metric_{{ metric_key }}_enabled" />
+                                    {{ metric_name }}
+                                </label>
+                            </h4>
+                            {% for input_name, input_config in inputs.items() %}
+                                {% if input_config.type == 'checkbox' %}
+                                    <label>
+                                        <input type="checkbox" class="form-check-input" value="1" name="{{ metric_key }};{{ input_name }}"
+                                            id="dd_metric_{{ metric_key }}_{{ input_name }}" />
+                                        {{ input_config.label }}
+                                    </label>
+                                {% elif input_config.type == 'select' %}
+                                    <label class="form-label">
+                                        {{ input_config.label }}
+                                        <select class="form-control" name="{{ metric_key }};{{ input_name }}" id="dd_metric_{{ metric_key }}_{{ input_name }}">
+                                            {% for k, v in input_config.choices.items() %}
+                                                <option value="{{ k }}">{{ v }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                {% else %}
+                                    <label class="form-label">
+                                        {{ input_config.label }}
+                                        {% if input_config.type == 'range' %}
+                                            (Value: <span id="dd_metric_{{ metric_key }}_{{ input_name }}_value"></span>)
+                                        {% endif %}
+                                        <input
+                                            {% if input_config.type == 'range' %}
+                                                type="range"
+                                                class="form-range"
+                                            {% else %}
+                                                type="{{ input_config.type }}"
+                                                class="form-control"
+                                            {% endif %}
+                                            {% if input_config.min is defined %}min="{{ input_config.min }}"{% endif %}
+                                            {% if input_config.max is defined %}max="{{ input_config.max }}"{% endif %}
+                                            {% if input_config.step is defined %}step="{{ input_config.step }}"{% endif %}
+                                            name="{{ metric_key }};{{ input_name }}"
+                                            id="dd_metric_{{ metric_key }}_{{ input_name }}"
+                                        />
+                                    </label>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
             <div class="col-xs-12">
                 <button type="button" class="btn btn-primary" id="dd_update">Update</button>
                 <button type="button" class="btn btn-secondary" id="dd_reset">Reset</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <h2>Available Metrics</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>URL Param</th>
+                            <th>Param Format</th>
+                            <th>Provides</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mc in metric_classes %}
+                            <tr>
+                                <td>
+                                    {{ mc.name }}
+                                    {% if mc.description %}
+                                        <br><small>{{ mc.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td><code>{{ mc.param }}</code></td>
+                                <td>{{ mc.format_description |e }}</td>
+                                <td>
+                                    <ul>
+                                        {% for k, v in mc.provides.items() %}
+                                            <li>
+                                                <code>context.metrics.{{ mc.key }}{% if k is not none %}.{{ k }}{% endif %}</code>:
+                                                {{ v }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -147,7 +225,20 @@
     {{ super() }}
     <script>
         (function() {
-            let metric_config = {{ metric_config |tojson }};
+            let metric_config = [
+                {% for metric_key, (metric_name, metric_param, inputs) in metric_inputs.items() %}
+                    {% for input_name, input_config in inputs.items() %}
+                        {
+                            'key': '{{ metric_key }}',
+                            'param': '{{ metric_param }}',
+                            'input_name': '{{ metric_key }}_{{ input_name }}',
+                            'form_name': '{{ metric_key }};{{ input_name }}',
+                            'type': '{{ input_config.type }}',
+                            'default': {{ input_config.default |tojson }},
+                        },
+                    {% endfor %}
+                {% endfor %}
+            ];
             let data = {
                 'key': 'demo-display',
                 'playlist': 0,
@@ -159,11 +250,12 @@
                 'metrics': {},
             };
 
-            Object.keys(metric_config).forEach(k => data.metrics[k] = {'enabled': metric_config[k].enabled ? true : false, 'value': metric_config[k].default || 0});
+            metric_config.forEach(c => data.metrics[c.input_name] = {'enabled': true, 'value': c.default || 0});
             let default_data = {};
             Object.assign(default_data, data);
 
             const base_url = '{{ url_for('display.render', _external=True) }}?';
+            const params_url = '{{ url_for('display.demo_params', _external=True) }}';
 
             const i_dd_key = document.getElementById('dd_key');
             const i_dd_playlist_screen = document.getElementById('dd_playlist_screen');
@@ -180,15 +272,29 @@
             const d_dd_iframe = document.getElementById('dd_iframe');
 
             let metric_els = {};
-            Object.keys(metric_config).forEach(k => {
-                metric_els[k] = {
-                    'enabled': document.getElementById('dd_metric_' + k + '_enabled'),
-                    'value': document.getElementById('dd_metric_' + k),
-                    'display': document.getElementById('dd_metric_' + k + '_value'),
+            metric_config.forEach(c => {
+                metric_els[c.input_name] = {
+                    'enabled': document.getElementById('dd_metric_' + c.key + '_enabled'),
+                    'value': document.getElementById('dd_metric_' + c.input_name),
+                    'display': document.getElementById('dd_metric_' + c.input_name + '_value'),
                 };
             });
 
-            const build_url = function() {
+            const build_url = async function() {
+                let formdata = new FormData();
+                metric_config.forEach(c => {
+                    if (c.type == 'checkbox') {
+                        formdata.append(c.form_name, metric_els[c.input_name].value.checked ? metric_els[c.input_name].value.value : '');
+                    } else {
+                        formdata.append(c.form_name, metric_els[c.input_name].value.value);
+                    }
+                });
+                let resp = await fetch(params_url, {
+                    'method': 'POST',
+                    'body': formdata,
+                })
+                let qs = await resp.text();
+
                 let parts = [
                     ['k', data['key']],
                     ['w', data['width']],
@@ -199,13 +305,13 @@
 
                 if (data['playlist']) parts.push(['debug_playlist_id', data['playlist']]);
                 if (data['playlist_screen']) parts.push(['debug_playlist_screen_id', data['playlist_screen']]);
-                Object.keys(data.metrics).forEach(k => {
-                    if (data.metrics[k].enabled) {
-                        parts.push([metric_config[k].param, data.metrics[k].value]);
+                metric_config.forEach(c => {
+                    if (data.metrics[c.input_name].enabled) {
+                        parts.push([c.param, data.metrics[c.input_name].value]);
                     }
                 });
 
-                return base_url + parts.map(p => p.join('=')).join('&');
+                return base_url + qs + '&' + parts.map(p => p.join('=')).join('&');
             };
 
             const update_data_from_form = function() {
@@ -223,10 +329,16 @@
                 }
                 data['color_spec'] = i_dd_color_spec.value;
                 data['display_spec'] = i_dd_display_spec.value;
-                Object.keys(metric_config).forEach(k => {
-                    data.metrics[k] = {
-                        'enabled': metric_els[k].enabled.checked,
-                        'value': metric_els[k].value.value,
+                metric_config.forEach(c => {
+                    let v;
+                    if (c.type == 'checkbox') {
+                        v = metric_els[c.input_name].value.checked;
+                    } else {
+                        v = metric_els[c.input_name].value.value;
+                    }
+                    data.metrics[c.input_name] = {
+                        'enabled': metric_els[c.input_name].enabled.checked,
+                        'value': v,
                     };
                 });
                 save_data_to_storage();
@@ -239,15 +351,16 @@
                 i_dd_height.value = data['height'];
                 i_dd_color_spec.value = data['color_spec'];
                 i_dd_display_spec.value = data['display_spec'];
-                Object.keys(metric_config).forEach(k => {
-                    metric_els[k].enabled.checked = data.metrics[k].enabled;
-                    metric_els[k].value.value = data.metrics[k].value;
-                    // TODO: do this better - handle alt. datatypes
-                    let v = data.metrics[k].value;
-                    v *= (metric_config[k].multiply || 1);
-                    v = v.toFixed(2);
-                    v += (metric_config[k].suffix || '');
-                    metric_els[k].display.innerHTML = v;
+                metric_config.forEach(c => {
+                    metric_els[c.input_name].enabled.checked = data.metrics[c.input_name].enabled;
+                    if (c.type == 'checkbox') {
+                        metric_els[c.input_name].value.checked = data.metrics[c.input_name].value;
+                    } else {
+                        metric_els[c.input_name].value.value = data.metrics[c.input_name].value;
+                    }
+                    if (metric_els[c.input_name].display) {
+                        metric_els[c.input_name].display.innerHTML = data.metrics[c.input_name].value;
+                    }
                 });
             };
 
@@ -273,8 +386,8 @@
                 update_form_from_data();
             };
 
-            const update_screen = function() {
-                const url = build_url();
+            const update_screen = async function() {
+                const url = await build_url();
                 d_dd_iframe_url.value = url;
                 d_dd_iframe.width = data['width'];
                 d_dd_iframe.height = data['height'];

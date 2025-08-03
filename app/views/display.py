@@ -92,5 +92,29 @@ def demo():
         screens=screens,
         DISPLAY_SPEC=DISPLAY_SPEC,
         COLOR_SPEC=COLOR_SPEC,
-        metric_config=Metric.get_all_demo_config(),
+        metric_inputs=Metric.get_all_demo_inputs(),
+        metric_classes=Metric.get_metric_classes(),
     )
+
+
+@bp.route('/demo/params', methods=['POST'])
+def demo_params():
+    data = {}
+    for k, v in request.form.items():
+        sk, mk = k.split(';')
+        if v:
+            try:
+                v = float(v)
+            except:
+                pass
+        else:
+            v = None
+        data.setdefault(sk, {})[mk] = v
+
+    out = {}
+    for mc in Metric.get_metric_classes():
+        v = mc.format_demo_inputs(data.get(mc.key, {}))
+        if v is not None:
+            out[mc.param] = v
+
+    return '&'.join(map(lambda v: '='.join(v), out.items())), {'content-type': 'text/plain'}

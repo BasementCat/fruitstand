@@ -77,7 +77,10 @@
                     <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-humidity.svg') }}" class="icon" />
                     <div class="stats-data">
                         <span class="title">Humidity</span>
-                        <span class="details">{{ forecast.current.humidity |fixed(d=0) }}%</span>
+                        <span class="details">
+                            {{ forecast.current.humidity |fixed(d=0) }}
+                            <span class="suffix">%</span>
+                        </span>
                     </div>
                 </div>
                 <div class="stats-item">
@@ -131,23 +134,36 @@
                         </span>
                     </div>
                 </div>
-                {# TODO: figure this out, probably need imperial/metric from the display
-                <div class="stats-item">
-                    <div class="icon">TODO: in temperature icon</div>
-                    <span class="title">Temperature</span>
-                    <span class="details">in temperature</span>
-                </div>
-                <div class="stats-item">
-                    <div class="icon">TODO: in humidity icon</div>
-                    <span class="title">Humidity</span>
-                    <span class="details">in humidity</span>
-                </div>
-                <div class="stats-item">
-                    <div class="icon">TODO: in pressure icon</div>
-                    <span class="title">Pressure</span>
-                    <span class="details">in pressure</span>
-                </div>
-                #}
+                {% if context.metrics.internal_temp is defined %}
+                    <div class="stats-item">
+                        <img src="{{ url_for('fruitstand_openweather.static', filename='images/house_thermometer.svg') }}" class="icon" />
+                        <div class="stats-data">
+                            <span class="title">Temperature</span>
+                            <span class="details">{{ context.metrics.internal_temp.temp |weather_convert(screen.config.units, 'temp', from_units=context.metrics.internal_temp.units) }}</span>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if context.metrics.internal_humidity is defined %}
+                    <div class="stats-item">
+                        <img src="{{ url_for('fruitstand_openweather.static', filename='images/house_humidity.svg') }}" class="icon" />
+                        <div class="stats-data">
+                            <span class="title">Humidity</span>
+                            <span class="details">
+                                {{ (context.metrics.internal_humidity * 100.0) |fixed(d=0) }}
+                                <span class="suffix">%</span>
+                            </span>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if context.metrics.internal_pressure is defined %}
+                    <div class="stats-item">
+                        <img src="{{ url_for('fruitstand_openweather.static', filename='images/house_pressure.svg') }}" class="icon" />
+                        <div class="stats-data">
+                            <span class="title">Pressure</span>
+                            <span class="details">{{ context.metrics.internal_pressure.pressure |weather_convert(screen.config.units, 'pressure', from_units=context.metrics.internal_pressure.units) }}</span>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
 
             <div class="graph">

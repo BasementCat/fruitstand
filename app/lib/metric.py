@@ -1,51 +1,40 @@
+import typing as t
+
 from flask import request
 
 
 class Metric:
-    _all_metrics = None
+    _all_metrics: t.Optional[t.List[t.Self]] = None
 
-    param = None
-    key = None
-    datatype = float
-    title = None
+    key: str = None
+    name: str = None
+    description: t.Optional[str] = None
+    param: str = None
+    format_description: str = None
+    provides: t.Dict[str, str] = {}
+    order: int = 100
 
-    def __init__(self, metrics):
-        self.metrics = metrics
-        self.raw = request.args.get(self.param)
-        self.setup()
-        self.parsed = self.parse_value(self.raw)
+    def __init__(self):
+        self.raw = request.args.get(self.param) or None
+        self.parsed = self.parse(self.raw)
 
-    def setup(self):
-        pass
+    def parse(self, raw):
+        return raw
 
     def get_data(self):
-        if self.raw is None:
+        if self.parsed is None:
             return {}
-        return {(self.key or self.param): self.parsed}
-
-    def __call__(self):
-        out = self.get_data()
-        if out:
-            return out
-        return {}
-
-    def parse_value(self, value):
-        return self._cast(self._parse(value))
-
-    def _cast(self, value):
-        if value is not None:
-            return self.datatype(value)
-
-    def _parse(self, value):
-        return value
+        if isinstance(self.parsed, dict):
+            return self.parsed
+        return {self.key: self.parsed}
 
     @classmethod
-    def get_title(cls):
-        return cls.title or cls.__name__
-
-    @classmethod
-    def get_demo_config(self):
+    def get_demo_inputs(cls):
         pass
+
+    @classmethod
+    def format_demo_inputs(cls, data):
+        return None
 
     @classmethod
     def get_metric_classes(cls):
@@ -54,169 +43,173 @@ class Metric:
             queue = [cls]
             while queue:
                 mc = queue.pop()
-                if mc.param:
+                if mc.key:
                     cls._all_metrics.append(mc)
                 queue += mc.__subclasses__()
+            cls._all_metrics = list(sorted(cls._all_metrics, key=lambda m: m.order))
         return list(cls._all_metrics)
 
     @classmethod
     def get_metrics(cls):
         out = {}
         for mc in cls.get_metric_classes():
-            met = mc(out)
-            out.update(met())
+            out.update(mc().get_data())
         return out
 
     @classmethod
-    def get_all_demo_config(cls):
+    def get_all_demo_inputs(cls):
         out = {}
         for mc in cls.get_metric_classes():
-            out[mc.param] = {'param': mc.param, 'datatype': mc.datatype.__name__, 'title': mc.get_title()}
-            out[mc.param].update(mc.get_demo_config() or {})
+            inputs = mc.get_demo_inputs()
+            if inputs:
+                out[mc.key] = (mc.name, mc.param, inputs)
         return out
-
 
 
 class Battery(Metric):
+    key = 'battery'
+    name = 'Battery'
+    description = "Battery statistics"
     param = 'batt'
+    format_description = '"<type(lipo,nimh,alkaline,alkaline4,lithium,lithium4)>;<voltage>[;c]" - ex. "lipo;3.9", "lipo;3.9;c" (charging)'
+    provides = {
+        'min_v': "Minimum voltage (float)",
+        'max_v': "Maximum voltage (float)",
+        'voltage': "Current voltage (float)",
+        'percent': "Current battery percentage (float, 0-1)",
+        'type': "Battery type (str)",
+        'charging': "Is charging (bool)",
+    }
+    order = 0
 
-    def setup(self):
-        super().setup()
-        self.maxv = float(request.args.get('batt_max', 4.2))
-        self.minv = float(request.args.get('batt_min', 3.4))
+    def parse(self, raw):
+        if raw:
+            parts = raw.split(';')
+            if len(parts) == 2:
+                charging = False
+                type_, voltage = parts
+            elif len(parts) == 3:
+                charging = True
+                type_, voltage = parts[:2]
+            else:
+                return
+            try:
+                voltage = float(voltage)
+                min_v, max_v = {
+                    'lipo': (3.4, 4.2),
+                    'nimh': (3.4, 4.8),
+                    'alkaline': (3.4, 4.5),
+                    'alkaline4': (3.4, 6),
+                    'lithium': (3.4, 4.5),
+                    'lithium4': (3.4, 6),
+                }[type_]
+                if type_.endswith('4'):
+                    type_ = type_[:-1]
+            except:
+                return
 
-    def get_data(self):
-        if self.parsed:
-            return {
-                'batt': {
-                    'v': self.parsed,
-                    'p': (self.parsed - self.minv) / (self.maxv - self.minv),
-                    'c': bool(int(request.args.get('batt_chg', 0))),
-                }
+            return {self.key: {
+                'min_v': min_v,
+                'max_v': max_v,
+                'voltage': voltage,
+                'percent': (voltage - min_v) / (max_v - min_v),
+                'type': type_,
+                'charging': charging,
+            }}
+
+    @classmethod
+    def get_demo_inputs(cls):
+        return {
+            'type': {
+                'label': "Battery Type",
+                'type': 'select',
+                'choices': {
+                    'lipo': 'LiPo (4.2v)',
+                    'nimh': 'NiMH (4, 4.8v)',
+                    'alkaline': 'Alkaline (3, 4.5v)',
+                    'alkaline4': 'Alkaline (4, 6v)',
+                    'lithium': 'Lithium (3, 4.5v)',
+                    'lithium4': 'Lithium (4, 6v)',
+                },
+                'default': 'lipo',
+            },
+            'voltage': {
+                'label': "Voltage",
+                'type': 'range',
+                'min': 3.4,
+                'max': 6,
+                'step': 0.01,
+                'default': 3.9,
+            },
+            'charging': {
+                'label': "Is Charging",
+                'type': 'checkbox',
+                'default': False,
             }
-
-    @classmethod
-    def get_demo_config(cls):
-        return {
-            'type': 'range',
-            # TODO: alt. inputs
-            'min': 3.4,
-            'max': 4.2,
-            'step': 0.01,
-            'default': 3.7,
-            'enabled': True,
         }
 
-
-class BaseTemperature(Metric):
-    def _parse(self, value):
-        self.unit = 'f'
-        if value:
-            if value.lower()[-1] in ('f', 'c'):
-                self.unit = value.lower()[-1]
-                value = value[:-1]
-        return value
-
-    def get_data(self):
-        if self.parsed:
-            temps = {'f': None, 'c': None}
-            temps[self.unit] = self.parsed
-            if temps['f'] is None:
-                temps['f'] = ((temps['c'] / 5.0) * 9.0) + 32
-            if temps['c'] is None:
-                temps['c'] = ((temps['f'] - 32) * 5.0) / 9.0
-            return {(self.key or self.param): temps}
-
     @classmethod
-    def get_demo_config(cls):
-        return {
-            'type': 'range',
-            'min': -50,
-            'max': 140,
-            'step': 0.1,
-            'default': 80,
-            'enabled': True,
-        }
-
-
-class InternalTemperature(BaseTemperature):
-    param = 'i_temp'
-
-
-class ExternalTemperature(BaseTemperature):
-    param = 'e_temp'
-
-
-class BaseHumidity(Metric):
-    @classmethod
-    def get_demo_config(cls):
-        return {
-            'type': 'range',
-            'min': 0,
-            'max': 1,
-            'step': 0.001,
-            'default': 0.45,
-            'enabled': True,
-        }
-
-class InternalHumidity(BaseHumidity):
-    param = 'i_hum'
-
-
-class ExternalHumidity(BaseHumidity):
-    param = 'e_hum'
-
-class BasePressure(Metric):
-    @classmethod
-    def get_demo_config(cls):
-        return {
-            'type': 'range',
-            'min': 20,
-            'max': 40,
-            'step': 0.1,
-            'default': 29.61,
-            'enabled': True,
-        }
-
-class InternalPressure(BasePressure):
-    param = 'i_pres'
-
-
-class ExternalPressure(BasePressure):
-    param = 'e_pres'
+    def format_demo_inputs(cls, data):
+        out = [
+            data['type'],
+            data['voltage'],
+            'c' if data['charging'] else None
+        ]
+        return ';'.join(map(str, filter(None, out)))
 
 
 class Wifi(Metric):
-    param = 'wifi_dbm'
+    key = 'wifi'
+    name = 'WiFi'
+    description = "WiFi statistics"
+    param = 'wifi'
+    format_description = "WiFi signal strength, dBm"
+    provides = {
+        'dbm': "Signal strength",
+        'bars': '"Bars" of signal strength',
+    }
+    order = 1
 
-    def get_data(self):
-        if self.parsed:
-            if self.parsed >= -30:
+    def parse(self, raw):
+        if raw:
+            try:
+                dbm = float(raw)
+            except:
+                return
+
+            if dbm >= -30:
                 bars = 4
-            elif self.parsed >= -67:
+            elif dbm >= -67:
                 bars = 3
-            elif self.parsed >= -70:
+            elif dbm >= -70:
                 bars = 2
-            elif self.parsed >= -80:
+            elif dbm >= -80:
                 bars = 1
-            elif self.parsed >= -90:
+            elif dbm >= -90:
                 bars = 0
             else:
                 bars = -1
+
             return {
-                'wifi': {
-                    'dbm': self.parsed,
+                self.key: {
+                    'dbm': dbm,
                     'b': bars,
                 }
             }
 
     @classmethod
-    def get_demo_config(cls):
+    def get_demo_inputs(cls):
         return {
-            'type': 'range',
-            'min': -100,
-            'max': 0,
-            'step': 1,
-            'default': -69,
-            'enabled': True,
+            'signal': {
+                'label': "Signal Strength (dBm)",
+                'type': 'range',
+                'min': -100,
+                'max': -10,
+                'step': 0.1,
+                'default': -71,
+            },
         }
+
+    @classmethod
+    def format_demo_inputs(cls, data):
+        return str(data['signal'])
