@@ -6,7 +6,7 @@ import urllib.parse
 import subprocess
 from io import BytesIO
 
-from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file
+from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file, current_app
 import arrow
 import requests
 
@@ -43,7 +43,14 @@ def render():
     else:
         path = os.path.join(tempfile.gettempdir(), 'fs-render-' + str(uuid.uuid4()) + '.png')
         try:
-            subprocess.check_call(['npm', 'run', 'render', '--', '--url', url, '--width', str(screen.display.width), '--height', str(screen.display.height), '--path', path])
+            subprocess.check_call([
+                'npm', 'run', 'render', '--',
+                '--url', url,
+                '--width', str(screen.display.width),
+                '--height', str(screen.display.height),
+                '--path', path,
+                '--browser', current_app.config['BROWSER'],
+            ])
             im = convert_colors(screen.display.color_spec, path)
             out = BytesIO()
             im.save(out, 'bmp')

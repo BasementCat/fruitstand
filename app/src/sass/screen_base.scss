@@ -8,12 +8,25 @@ html, body {
     height: 100%;
     width: 100%;
     font-family: Tahoma, sans-serif;
+    letter-spacing: 0.9px;
 }
 
 body:not(.ds-browser) {
+    -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: none;
-    font-smooth: none;
+    font-smooth: never;
+
+    text-rendering: geometricPrecision;
+
     shape-rendering: crispEdges;
+
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: pixelated;
+    image-rendering: optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
 }
 
 body {

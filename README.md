@@ -22,11 +22,13 @@ Configuration may also be passed by setting environment variables.  All supporte
 
 * **FRUITSTAND_SCREEN_IMPORTS** - A comma-separated list of modules to import that contain screen definitions
 * **FRUITSTAND_TIMEZONE** - Default timezone for the installation
-* **CACHE_DRIVER** - Cache driver to use, valid options are:
+* **FRUITSTAND_CACHE_DRIVER** - Cache driver to use, valid options are:
     * `filesystem` (default)
     * `database`
-* **FILESYSTEM_CACHE_DIR** - For filesystem caching, the directory to store data. Must exist.
-* **FILESYSTEM_CACHE_SUBDIR** - Subdirectory within the system temp dir to store data, optional.  Does not need to already exist.
+* **FRUITSTAND_FILESYSTEM_CACHE_DIR** - For filesystem caching, the directory to store data. Must exist.
+* **FRUITSTAND_FILESYSTEM_CACHE_SUBDIR** - Subdirectory within the system temp dir to store data, optional.  Does not need to already exist.
+* **FRUITSTAND_BROWSER** - Browser to use for rendering, "firefox" or "chrome" (must be installed via `npx puppeteer browsers install <browser>`)
+  * NOTE: chrome is installed & used by default, and allows for the ability to (more or less) completely disable antialiasing (fonts & SVGs)/subpixel font rendering - Firefox does not, and so is not recommended for smaller monochrome displays
 
 ## Running
 

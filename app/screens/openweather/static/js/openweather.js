@@ -693,9 +693,12 @@ var _autoDefault = parcelHelpers.interopDefault(_auto);
         return c.createPattern(shape, 'repeat');
     };
     (0, _autoDefault.default).defaults.font.size = 14;
+    (0, _autoDefault.default).defaults.font.family = 'Tahoma, sans-serif';
+    (0, _autoDefault.default).defaults.color = '#000';
     new (0, _autoDefault.default)(document.getElementById('graph-data'), {
         type: 'bar',
         options: {
+            devicePixelRatio: 1,
             animation: false,
             plugins: {
                 legend: {
@@ -709,6 +712,10 @@ var _autoDefault = parcelHelpers.interopDefault(_auto);
                 x: {
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        minRotation: 0,
+                        maxRotation: 0
                     },
                     border: {
                         color: '#000',

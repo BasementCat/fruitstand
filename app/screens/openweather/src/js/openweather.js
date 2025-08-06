@@ -29,12 +29,15 @@ import Chart from 'chart.js/auto'
   }
 
   Chart.defaults.font.size = 14;
+  Chart.defaults.font.family = 'Tahoma, sans-serif';
+  Chart.defaults.color = '#000';
 
   new Chart(
     document.getElementById('graph-data'),
     {
       type: 'bar',
       options: {
+        devicePixelRatio: 1,
         animation: false,
         plugins: {
           legend: {
@@ -48,6 +51,10 @@ import Chart from 'chart.js/auto'
           x: {
             grid: {
               display: false,
+            },
+            ticks: {
+              minRotation: 0,
+              maxRotation: 0,
             },
             border: {
               color: '#000',
