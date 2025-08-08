@@ -35,7 +35,16 @@ def render():
         'metrics': json.dumps(Metric.get_metrics()),
     }
 
-    url = url_for(screen.route, **args, _external=True)
+    if current_app.config.get('INTERNAL_WEB_HOST'):
+        # the _external argument doesn't work here as it uses the configured host
+        # (or host header, probably localhost) and this is not going to be valid
+        # in certain environments like Docker, so "fix" it
+        url = 'http://{}{}'.format(
+            current_app.config['INTERNAL_WEB_HOST'],
+            url_for(screen.route, **args)
+        )
+    else:
+        url = url_for(screen.route, **args, _external=True)
     headers = {'X-Refresh-Time': screen.playlist_screen.refresh_interval or screen.playlist.default_refresh_interval}
     if screen.display.display_spec == 'browser':
         payload = requests.get(url).content

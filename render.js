@@ -16,15 +16,24 @@ program
 
 const options = program.opts();
 
-const browser = await puppeteer.launch({
-    browser: options.browser,
-    extraPrefsFirefox: {
-        'gfx.text.disable-aa': true,
-        'gfx.font_rendering.cleartype_params.cleartype_level': 0,
-        'gfx.font_rendering.cleartype_params.pixel_structure': 0,
-        'gfx.font_rendering.cleartype_params.rendering_mode': 1,
-    },
-});
+const browserConfig = {browser: options.browser}
+
+if (options.browser == 'firefox') {
+  browserConfig.extraPrefsFirefox = {
+    'gfx.text.disable-aa': true,
+    'gfx.font_rendering.cleartype_params.cleartype_level': 0,
+    'gfx.font_rendering.cleartype_params.pixel_structure': 0,
+    'gfx.font_rendering.cleartype_params.rendering_mode': 1,
+  };
+}
+
+if (options.browser == 'chrome') {
+  browserConfig.args = [
+    '--no-sandbox --disable-gpu'
+  ];
+}
+
+const browser = await puppeteer.launch(browserConfig);
 const page = await browser.newPage();
 await page.setViewport({
     width: parseInt(options.width),

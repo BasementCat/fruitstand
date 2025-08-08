@@ -11,13 +11,19 @@ services:
 
   app:
     build: .
-    command: ['--py-autoreload=1']
+    command: [
+      '--processes=4',
+      '--py-autoreload=1',
+      '--socket=0.0.0.0:3031',
+      '--protocol=uwsgi',
+    ]
     restart: always
     depends_on:
       - db
     environment:
       - FRUITSTAND_SECRET_KEY=lkasdjfalsdkjflskjdklsjdflk
       - FRUITSTAND_SQLALCHEMY_DATABASE_URI=mysql+pymysql://fruitstand:password@db:3306/fruitstand
+      - FRUITSTAND_INTERNAL_WEB_HOST=web
     volumes:
       - .:/app
 

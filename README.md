@@ -29,10 +29,22 @@ Configuration may also be passed by setting environment variables.  All supporte
 * **FRUITSTAND_FILESYSTEM_CACHE_SUBDIR** - Subdirectory within the system temp dir to store data, optional.  Does not need to already exist.
 * **FRUITSTAND_BROWSER** - Browser to use for rendering, "firefox" or "chrome" (must be installed via `npx puppeteer browsers install <browser>`)
   * NOTE: chrome is installed & used by default, and allows for the ability to (more or less) completely disable antialiasing (fonts & SVGs)/subpixel font rendering - Firefox does not, and so is not recommended for smaller monochrome displays
+* **FRUITSTAND_INTERNAL_WEB_HOST** - Internal host for web requests.
+  * For a production deployment, setting the default SERVER_NAME is fine as it should be resolvable.
+  * For local development with Docker, "localhost" likely won't work as this most likely will be in a container running uWSGI, so point to the actual front proxy container name.
 
 ## Running
 
-Run the following commands to get up and running:
+### Docker
+
+A Dockerfile + compose file are provided for easy setup, running the application via uWSGI and exposing it via nginx on port 8000.  To start:
+
+    docker compose up -d
+    docker compose exec app -- flask db upgrade
+
+### Local development environment
+
+In order to run locally you'll need to set up a minimal configuration as explained above, either in a `.env` file or by setting environment variables.  Run the following commands to get up and running:
 
     npm install
     pipenv install
@@ -49,6 +61,13 @@ To build assets for the main application, as well as any discovered screens:
     # dev/testing
     flask run compile sass --env dev --watch
 
+To build within Docker if you do not set up a local development environment, prefix the commands with `docker compose exec app --`, for example `docker compose exec app -- flask run compile sass`
+
+## Docker image
+
+The image built by the Dockerfile runs the application via uWSGI with a minimal configuration; see the docker-compose file for the arguments used to run in WSGI protocol mode.  For alternate deployments, various options can be tuned by setting environment variables or passing command line options, or providing a config file - see the uWSGI documentation.
+
+For example, to run via HTTP (for example, for a reverse proxy that does not speak the WSGI protocol), you can pass a command like `--http=0.0.0.0:8080 --master --processes=4`
 
 ## Sources/Attributions
 

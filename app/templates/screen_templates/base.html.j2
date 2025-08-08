@@ -5,6 +5,8 @@
         <title>{% block title %}{% endblock %}</title>
         {% block styles %}
             <link rel="stylesheet" href="{{ url_for('static', filename='css/screen_base.css') }}" />
+
+            <link rel="stylesheet" href="{{ url_for('static', filename='fonts/liberation-sans-fontfacekit/web fonts/liberationsans_regular/stylesheet.css') }}" />
         {% endblock %}
     </head>
     <body class="ds-{{ display.display_spec }} cs-{{ display.color_spec }}">
