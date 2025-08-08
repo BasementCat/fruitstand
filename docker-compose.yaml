@@ -1,19 +1,32 @@
 services:
-  # web:
-  #   build: .
-  #   ports:
-  #     - 80:80
-  #   restart: always
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     - DB_HOST=db
-  #     - DB_NAME=fruitstand
-  #     - DB_USER=fruitstand
-  #     - DB_PASS=password
-  #     - SECRET_KEY=totallyarealsecret
-  #   volumes:
-  #     - .:/var/www/html
+  web:
+    image: nginx:1.29-alpine
+    restart: always
+    depends_on:
+      - app
+    ports:
+      - 8000:80
+    volumes:
+      - ./local-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  app:
+    build: .
+    command: [
+      '--processes=4',
+      '--py-autoreload=1',
+      '--socket=0.0.0.0:3031',
+      '--protocol=uwsgi',
+    ]
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - FRUITSTAND_SECRET_KEY=lkasdjfalsdkjflskjdklsjdflk
+      - FRUITSTAND_SQLALCHEMY_DATABASE_URI=mysql+pymysql://fruitstand:password@db:3306/fruitstand
+      - FRUITSTAND_INTERNAL_WEB_HOST=web
+    volumes:
+      - .:/app
+
   db:
     image: mariadb:lts
     restart: always
@@ -26,6 +39,7 @@ services:
       - MARIADB_PASSWORD=password
     volumes:
       - db-data:/var/lib/mysql
+
   # mail:
   #   image: mailhog/mailhog
   #   restart: always

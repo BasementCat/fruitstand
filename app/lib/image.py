@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from PIL import Image
 
@@ -38,7 +38,7 @@ def convert_colors(color_spec: str, input_path: str):
 
     if cs['bits'] == 1:
         in_im = in_im.convert('L')
-        in_im = in_im.point(lambda p: 255 if p >= 128 else 0)
+        in_im = in_im.point(lambda p: 255 if p >= 170 else 0)
         out_im.paste(in_im, tuple([0, 0] + list(in_im.size)))
     elif cs['bits'] < 16:
         in_im = in_im.quantize(

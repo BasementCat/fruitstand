@@ -110,7 +110,7 @@
                 <div class="stats-item">
                     <img src="{{ url_for('fruitstand_openweather.static', filename='images/air_filter.svg') }}" class="icon" />
                     <div class="stats-data">
-                        <span class="title">Air Quality Index</span>
+                        <span class="title">Air Quality</span>
                         <span class="details">
                             {{ air_pollution.list.0.main.aqi |fixed(d=0) }}
                             <span class="suffix">

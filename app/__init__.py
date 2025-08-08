@@ -23,6 +23,7 @@ def create_app():
     load_dotenv()
     app.config.from_prefixed_env(prefix='FRUITSTAND')
     app.config['CACHE_DRIVER'] = app.config.get('CACHE_DRIVER', 'filesystem')
+    app.config['BROWSER'] = app.config.get('BROWSER', 'chrome')
     app.config['SCREEN_IMPORTS'] = list(filter(None, map(str.strip, (app.config.get('SCREEN_IMPORTS') or '').split(','))))
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
@@ -39,11 +40,13 @@ def create_app():
     from app import models
 
     from app.views import (
+        index as index_view,
         screen as screen_view,
         playlist as playlist_view,
         display as display_view,
     )
 
+    app.register_blueprint(index_view.bp)
     app.register_blueprint(screen_view.bp, url_prefix='/screen')
     app.register_blueprint(playlist_view.bp, url_prefix='/playlist')
     app.register_blueprint(display_view.bp, url_prefix='/display')
