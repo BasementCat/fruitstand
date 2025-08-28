@@ -29,7 +29,8 @@ if (options.browser == 'firefox') {
 
 if (options.browser == 'chrome') {
   browserConfig.args = [
-    '--no-sandbox --disable-gpu'
+    '--no-sandbox',
+    '--disable-gpu'
   ];
 }
 
