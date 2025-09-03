@@ -1,31 +1,21 @@
 services:
-  web:
-    image: nginx:1.29-alpine
-    restart: always
-    depends_on:
-      - app
-    ports:
-      - 8000:80
-    volumes:
-      - ./local-nginx.conf:/etc/nginx/conf.d/default.conf:ro
-
   app:
-    build: .
+    image: ghcr.io/basementcat/fruitstand:master
     command: [
       '--processes=4',
       '--py-autoreload=1',
-      '--socket=0.0.0.0:3031',
-      '--protocol=uwsgi',
+      '--http-socket=0.0.0.0:3031'
     ]
+    ports:
+      - 3031:3031
     restart: always
     depends_on:
       - db
     environment:
       - FRUITSTAND_SECRET_KEY=lkasdjfalsdkjflskjdklsjdflk
       - FRUITSTAND_SQLALCHEMY_DATABASE_URI=mysql+pymysql://fruitstand:password@db:3306/fruitstand
+      - FRUITSTAND_CACHE_DRIVER=database
       - FRUITSTAND_INTERNAL_WEB_HOST=web
-    volumes:
-      - .:/app
 
   db:
     image: mariadb:lts
@@ -40,11 +30,5 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
-  # mail:
-  #   image: mailhog/mailhog
-  #   restart: always
-  #   ports:
-  #     - '1025:1025'
-  #     - '8025:8025'
 volumes:
-  db-data: {}
+  db-data:
