@@ -85,7 +85,7 @@ class FilesystemDriver(CacheDriver):
             self.cache_dir = os.path.join(tempfile.gettempdir(), app.config.get('FILESYSTEM_CACHE_SUBDIR', 'fruitstand'))
             os.makedirs(self.cache_dir, exist_ok=True)
 
-        if not os.path.is_dir(self.cache_dir):
+        if not os.path.isdir(self.cache_dir):
             raise RuntimeError("Filesystem cache dir does not exist or is not a directory: " + self.cache_dir)
 
     def _get_path(self, key: str) -> str:
