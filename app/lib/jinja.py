@@ -63,7 +63,7 @@ def plural(value, singular, plural=None):
 def dt(value, format='MMM Do, YYYY h:mm a', timezone=None, no_markup=False):
     if value is not None:
         # TODO: user tz
-        timezone = timezone or current_app.config['TIMEZONE']
+        timezone = timezone or current_app.config.get('TIMEZONE', 'UTC')
         value = arrow.get(value)
         value_utc = value.to('UTC')
         value_utc_s = value_utc.format(format)
