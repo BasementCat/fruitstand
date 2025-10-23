@@ -31,6 +31,7 @@ def create_app():
     ]
     if app.debug:
         app.config['SCREEN_IMPORTS'].append('app.screens.color_test')
+    app.config['TIMEZONE'] = app.config.get('TIMEZONE', 'UTC')
 
     Bootstrap(app)
     db.init_app(app)
