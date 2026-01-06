@@ -1,16 +1,31 @@
 {% extends "root.html.j2" %}
 
-{% macro nav_link(route, title, prefix=None, prefix_not=None, icon=None) %}
+{% macro nav_link(route, title, prefix=None, prefix_not=None, icon=None, data='', dropdown=False) %}
     {% set is_active = request.url_rule.endpoint.startswith(prefix or route) %}
     {% if prefix_not %}{% set is_active = is_active and not request.url_rule.endpoint.startswith(prefix_not) %}{% endif %}
-    <li class="{{ 'active' if is_active else '' }}">
-        <a href="{{ url_for(route) }}">
-            {% if icon %}
-                <i class="fa fa-{{ icon }}"></i>
-            {% endif %}
-            {{ title }}
-        </a>
-    </li>
+    {% if dropdown %}
+        <li class="{{ 'active' if is_active else '' }} dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                {% if icon %}
+                    <i class="fa fa-{{ icon }}"></i>
+                {% endif %}
+                {{ title }}
+                <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                {{ caller() }}
+            </ul>
+        </li>
+    {% else %}
+        <li class="{{ 'active' if is_active else '' }}">
+            <a href="{{ url_for(route, **kwargs) }}" {{ data }}>
+                {% if icon %}
+                    <i class="fa fa-{{ icon }}"></i>
+                {% endif %}
+                {{ title }}
+            </a>
+        </li>
+    {% endif %}
 {% endmacro %}
 
 {% block styles %}
@@ -45,6 +60,20 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {{ nav_link('display.demo', 'Demo Display', prefix='display.demo', icon='display') }}
+                    {% if users_enabled() %}
+                        {% if current_user.is_authenticated %}
+                            {% call nav_link(None, current_user.username, prefix='user.', icon='user', dropdown=True) %}
+                                {% if current_user.is_admin %}
+                                    {{ nav_link('user.list_users', 'Manage Users', prefix='user.list_users', icon='users') }}
+                                    <li role="separator" class="divider"></li>
+                                {% endif %}
+                                {{ nav_link('user.edit', 'My Account', icon='user-pen', user_id=current_user.id) }}
+                                {{ nav_link('user.logout', 'Log Out', icon='door-open', data='data-link-method="post"') }}
+                            {% endcall %}
+                        {% else %}
+                            {{ nav_link('user.login', 'Log In', icon='user') }}
+                        {% endif %}
+                    {% endif %}
                 </ul>
             </div><!--/.nav-collapse -->
         </div>

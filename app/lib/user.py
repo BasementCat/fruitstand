@@ -4,6 +4,14 @@ import flask_login
 from flask import current_app, abort
 
 
+def users_enabled() -> bool:
+    """\
+    Determine if users are enabled
+    """
+
+    return bool(current_app.config['ENABLE_USERS'])
+
+
 def users_enabled_required(callback):
     """\
     Decorator to require user management to be enabled for a view.  If not, the

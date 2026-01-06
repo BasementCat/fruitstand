@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, IntegerField, SubmitField, PasswordField, EmailField, BooleanField
+from wtforms import StringField, TextAreaField, IntegerField, SubmitField, PasswordField, EmailField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Optional, NumberRange, ValidationError
 from wtforms_sqlalchemy.fields import QuerySelectField
 import flask_login
+import pytz
 
 from app.models import Playlist, User
 
@@ -39,14 +40,14 @@ def UserEditForm(obj=None, **kwargs):
             username = StringField("Username", validators=[DataRequired()])
         email = EmailField("Email Address", validators=[DataRequired()])
         if obj:
-            set_password = PasswordField("Password", help="Only enter a new password if you wish to change it")
-            retype_password = PasswordField("Password", help="Enter the same password again to change it")
+            set_password = PasswordField("Password", description="Only enter a new password if you wish to change it")
+            retype_password = PasswordField("Password", description="Enter the same password again to change it")
         else:
-            password = PasswordField("Password", help="Enter a strong unique password for the account", validators=[DataRequired()])
-            retype_password = PasswordField("Password", help="Enter the same password again", validators=[DataRequired()])
+            password = PasswordField("Password", description="Enter a strong unique password for the account", validators=[DataRequired()])
+            retype_password = PasswordField("Password", description="Enter the same password again", validators=[DataRequired()])
         if flask_login.current_user.is_authenticated and flask_login.current_user.is_admin:
             is_admin = BooleanField("Is Administrator?")
-            is_enabled = BooleanField("Is Enabled?")
+            is_enabled = BooleanField("Is Enabled?", default=True)
         timezone = SelectField("Timezone", choices=[(tz, tz) for tz in pytz.all_timezones], validators=[DataRequired()])
         if obj:
             submit = SubmitField("Save User")

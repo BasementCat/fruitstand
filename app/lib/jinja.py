@@ -3,6 +3,7 @@ from markupsafe import Markup
 import arrow
 
 from app.constants import DISPLAY_SPEC, COLOR_SPEC
+from app.lib.user import users_enabled
 
 
 jinja_env = {
@@ -138,3 +139,6 @@ def if_plural(value, plural, singular):
 @jglobal()
 def now():
     return arrow.utcnow()
+
+
+jglobal()(users_enabled)

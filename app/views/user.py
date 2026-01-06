@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.lib.user import login_required, admin_required, users_enabled_required, logout_user
 from app.models import User
-from app.forms import UserLoginForm
+from app.forms import UserLoginForm, UserEditForm
 from app import db
 
 
@@ -28,14 +28,14 @@ def login():
 def logout():
     logout_user()
     flash("You are now logged out.", 'info')
-    return redirect(url_for('index.index'))
+    return redirect(url_for('.login'))
 
 
 @bp.route('/list', methods=['GET'])
 @users_enabled_required
 @admin_required
 def list_users():
-    users = User.query.order(User.username.asc()).all()
+    users = User.query.order_by(User.username.asc()).all()
     return render_template('user/list.html.j2', users=users)
 
 
@@ -62,7 +62,7 @@ def edit(user_id=None):
                 flash(f"Saved changes to user {user.username}", 'success')
             else:
                 flash(f"Created new user {user.username}", 'success')
-                return redirect(url_for(user.id))
+                return redirect(url_for('.edit', user_id=user.id))
         except IntegrityError:
             db.session.rollback()
             flash("Username is not unique", 'danger')
