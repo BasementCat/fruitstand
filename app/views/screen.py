@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, abort, redirect, url_for, request,
 
 from app.models import Screen, PlaylistScreen, Config
 from app.lib.screen import Screen as ScreenBase
+from app.lib.user import login_required
 from app import db
 
 
@@ -9,6 +10,7 @@ bp = Blueprint('screen', __name__)
 
 @bp.route('/', methods=['GET'])
 @bp.route('/list', methods=['GET'])
+@login_required
 def list():
     Screen.sync(ScreenBase.get_all().values())
 
@@ -16,6 +18,7 @@ def list():
 
 
 @bp.route('/toggle/<int:screen_id>', methods=['POST'])
+@login_required
 def toggle(screen_id):
     s = Screen.query.get(screen_id)
     if not s:
@@ -29,6 +32,7 @@ def toggle(screen_id):
 
 @bp.route('/configure/<int:screen_id>', methods=['GET', 'POST'])
 @bp.route('/configure/<int:screen_id>/<int:playlist_screen_id>', methods=['GET', 'POST'])
+@login_required
 def configure(screen_id, playlist_screen_id=None):
     db_screen = Screen.query.get(screen_id)
     if not db_screen:
