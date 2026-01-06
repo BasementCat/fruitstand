@@ -5,6 +5,7 @@ from flask import Flask, g, request, abort
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager
 from dotenv import load_dotenv
 
 from app.lib.jinja import apply_jinja_env
@@ -13,6 +14,7 @@ from app.lib.cache import Cache
 
 db = SQLAlchemy()
 cache = Cache()
+login_manager = LoginManager()
 
 
 def create_app():
@@ -32,13 +34,19 @@ def create_app():
     if app.debug:
         app.config['SCREEN_IMPORTS'].append('app.screens.color_test')
     app.config['TIMEZONE'] = app.config.get('TIMEZONE', 'UTC')
+    app.config['ENABLE_USERS'] = bool(app.config.get('ENABLE_USERS', False))
 
     Bootstrap(app)
     db.init_app(app)
     Migrate(app, db)
     cache.init_app(app)
+    login_manager.init_app(app)
 
     from app import models
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return models.User.query.get(user_id)
 
     from app.views import (
         index as index_view,

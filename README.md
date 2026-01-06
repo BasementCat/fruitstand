@@ -32,6 +32,9 @@ Configuration may also be passed by setting environment variables.  All supporte
 * **FRUITSTAND_INTERNAL_WEB_HOST** - Internal host for web requests.
   * For a production deployment, setting the default SERVER_NAME is fine as it should be resolvable.
   * For local development with Docker, "localhost" likely won't work as this most likely will be in a container running uWSGI, so point to the actual front proxy container name.
+* **FRUITSTAND_ENABLE_USERS** - Enable user management & login.
+  * If not set, user functionality will be unavailable and any visitor can manage everything.
+  * It's highly recommended to enable this if hosting Fruitstand outside of a local network.
 
 ## Running
 
