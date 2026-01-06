@@ -57,9 +57,13 @@ def create_app():
 
     Screen.install_all(app)
 
-    from app.commands import compile_assets as compile_assets_commands
+    from app.commands import (
+        compile_assets as compile_assets_commands,
+        user as user_commands,
+    )
 
     app.cli.add_command(compile_assets_commands.cli)
+    app.cli.add_command(user_commands.cli)
 
     # Do this last; lets screens add jinja stuff
     apply_jinja_env(app)
