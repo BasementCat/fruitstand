@@ -1,0 +1,40 @@
+{% extends "base.html.j2" %}
+
+{% set title = "Users" %}
+
+{% block main %}
+    <div class="col-xs-12">
+        <a class="btn btn-success" href="{{ url_for('user.edit') }}">
+            Add User
+        </a>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Enabled</th>
+                    <th>Timezone</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>{{ u.is_admin |typed_label }}</td>
+                        <td>{{ u.is_enabled |typed_label(false_is_danger=True) }}</td>
+                        <td>{{ u.timezone }}</td>
+                        <td>
+                            <a class="btn btn-primary btn-xs" href="{{ url_for('user.edit', user_id=u.id) }}">
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

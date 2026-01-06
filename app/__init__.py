@@ -41,6 +41,7 @@ def create_app():
     Migrate(app, db)
     cache.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = "user.login"
 
     from app import models
 
@@ -53,12 +54,14 @@ def create_app():
         screen as screen_view,
         playlist as playlist_view,
         display as display_view,
+        user as user_view
     )
 
     app.register_blueprint(index_view.bp)
     app.register_blueprint(screen_view.bp, url_prefix='/screen')
     app.register_blueprint(playlist_view.bp, url_prefix='/playlist')
     app.register_blueprint(display_view.bp, url_prefix='/display')
+    app.register_blueprint(user_view.bp, url_prefix='/user')
 
     for mod in app.config['SCREEN_IMPORTS']:
         importlib.import_module(mod)
