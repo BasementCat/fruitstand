@@ -22,6 +22,7 @@ flask-login = "*"
 arrow = "*"
 pytz = "*"
 python-slugify = "*"
+tabulate = "*"
 
 [dev-packages]
 pudb = "*"
