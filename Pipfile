@@ -14,14 +14,17 @@ flask-sqlalchemy = "*"
 python-dotenv = "*"
 pymysql = "*"
 flask-migrate = "*"
-arrow = "*"
 sqlalchemy-utils = "*"
 wtforms-sqlalchemy = "*"
 requests = "*"
 pillow = "*"
+flask-login = "*"
+arrow = "*"
+pytz = "*"
+python-slugify = "*"
 
 [dev-packages]
 pudb = "*"
 
 [requires]
-python_version = "3.13"
+python_version = "3.11"
