@@ -31,9 +31,10 @@ def render():
     )
 
     args = {
-        'playlist_screen_id': screen.playlist_screen.id,
+        'playlist_screen_id': screen.playlist_screen.id if screen.playlist_screen else None,
         'display_id': screen.display.id,
         'metrics': json.dumps(Metric.get_metrics()),
+        '_render_display': 1,
     }
 
     if current_app.config.get('INTERNAL_WEB_HOST'):
@@ -46,7 +47,9 @@ def render():
         )
     else:
         url = url_for(screen.route, **args, _external=True)
-    headers = {'X-Refresh-Time': screen.playlist_screen.refresh_interval or screen.playlist.default_refresh_interval}
+    headers = {
+        'X-Refresh-Time': screen.refresh_interval,
+    }
     if screen.display.display_spec == 'browser':
         payload = requests.get(url).content
         headers.update({'Content-length': len(payload), 'Content-type': 'text/html'})

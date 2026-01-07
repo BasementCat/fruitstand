@@ -206,7 +206,7 @@ class Screen(Base):
         for screen_class in screen_classes:
             screen_obj = existing.get(screen_class.key)
             if not screen_obj:
-                screen_obj = cls(key=screen_class.key)
+                screen_obj = cls(key=screen_class.key, enabled=screen_class._is_system)
                 db.session.add(screen_obj)
                 existing[screen_class.key] = screen_obj
             screen_obj.present = True

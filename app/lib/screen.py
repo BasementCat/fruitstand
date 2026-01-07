@@ -30,7 +30,7 @@ class Screen:
     default_config: Dict[str, Any] = {}
     _is_system: bool = False
 
-    def __init__(self, display: Display, playlist: Playlist, playlist_screen: PlaylistScreen, screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any]):
+    def __init__(self, display: Display, playlist: Optional[Playlist], playlist_screen: Optional[PlaylistScreen], screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any], system: bool=False):
         self.display = display
         self.playlist = playlist
         self.playlist_screen = playlist_screen
@@ -40,6 +40,7 @@ class Screen:
         self.config.update(self.screen_config)
         self.config.update(self.playlist_config)
         self.context = dict(context)
+        self.system = system
 
         loader = FileSystemLoader([
             os.path.join(current_app.root_path, current_app.template_folder, 'screen_templates'),
@@ -50,6 +51,14 @@ class Screen:
             autoescape=select_autoescape()
         )
         apply_jinja_to_env(self.jinja_env)
+
+    @property
+    def refresh_interval(self):
+        if self.system:
+            # won't have playlist/playlist_screen
+            return 600
+
+        return self.playlist_screen.refresh_interval or self.playlist.default_refresh_interval
 
     def render_template(self, template_name, **kwargs):
         kwargs.update({
@@ -96,19 +105,40 @@ class Screen:
         if not display:
             raise DisplayNotFound(display_id)
 
-        playlist, playlist_screen = display.get_playlist_screen(
-            playlist_id=playlist_id,
-            playlist_screen_id=playlist_screen_id,
-        )
-        if not (playlist and playlist_screen):
-            raise PlaylistNotFound((playlist_id, playlist_screen_id, display.id))
+        system = False
+        screen_cls_key = None
+        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+            if display.status == 'pending':
+                system = True
+                screen_cls_key = 'fruitstand/approval_code'
+            elif display.status == 'disapproved':
+                # TODO: if display.status == disapproved, display that screen
+                system = True
+                screen_cls_key = None
 
-        screen_cls = cls.get(playlist_screen.screen.key)
+        playlist = playlist_screen = None
+        playlist_config = {}
+        screen_config = {}
+        if not system:
+            playlist, playlist_screen = display.get_playlist_screen(
+                playlist_id=playlist_id,
+                playlist_screen_id=playlist_screen_id,
+            )
+            if not (playlist and playlist_screen):
+                raise PlaylistNotFound((playlist_id, playlist_screen_id, display.id))
+
+            screen_cls_key = playlist_screen.screen.key
+            playlist_config = Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen)
+            screen_config = Config.load(screen=playlist_screen.screen)
+
+        screen_cls = cls.get(screen_cls_key)
         if not screen_cls:
-            raise ScreenNotFound((playlist_screen.screen.key, playlist.id, playlist_screen.id, display.id))
-
-        playlist_config = Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen)
-        screen_config = Config.load(screen=playlist_screen.screen)
+            raise ScreenNotFound((
+                screen_cls_key,
+                playlist.id if playlist else None,
+                playlist_screen.id if playlist_screen else None,
+                display.id
+            ))
 
         context = {'metrics': {}}
         try:
@@ -117,4 +147,4 @@ class Screen:
             pass
         context.update(display.get_context())
 
-        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context)
+        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context, system=system)

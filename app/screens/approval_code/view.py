@@ -1,0 +1,9 @@
+from flask import Blueprint, g, render_template
+
+
+bp = Blueprint('fruitstand_approvalcode', __name__, template_folder='templates', static_folder='static')
+
+
+@bp.get('/')
+def render():
+    return g.screen.render_template('main.html.j2', display=g.screen.display)

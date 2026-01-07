@@ -30,6 +30,7 @@ def create_app():
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
         'app.screens.openweather',
+        'app.screens.approval_code',
     ]
     if app.debug:
         app.config['SCREEN_IMPORTS'].append('app.screens.color_test')
@@ -82,11 +83,14 @@ def create_app():
 
     @app.before_request
     def load_pls_config():
-        display_id = int(request.args.get('display_id', 0))
-        pls_id = int(request.args.get('playlist_screen_id', 0))
-        if display_id and pls_id:
-            try:
-                g.screen = Screen.load_for_render(display_id=display_id, playlist_screen_id=pls_id)
-            except ScreenLoadError:
+        if request.args.get('_render_display'):
+            display_id = int(request.args.get('display_id', 0))
+            if display_id:
+                pls_id = int(request.args.get('playlist_screen_id', 0))
+                try:
+                    g.screen = Screen.load_for_render(display_id=display_id, playlist_screen_id=pls_id)
+                except ScreenLoadError:
+                    abort(404)
+            else:
                 abort(404)
     return app
