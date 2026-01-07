@@ -11,6 +11,7 @@
                 <th>Key</th>
                 <th>Present?</th>
                 <th>Enabled?</th>
+                <th>System?</th>
                 <th>&nbsp;</th>
             </tr>
         </thead>
@@ -22,6 +23,7 @@
                     <td>{{ s.key }}</td>
                     <td>{{ s.present |typed_label }}</td>
                     <td>{{ s.enabled |typed_label }}</td>
+                    <td>{{ s.system |typed_label(false_is_danger=False) }}</td>
                     <td>
                         <form method="POST" action="{{ url_for('.toggle', screen_id=s.id, _method='POST') }}">
                             <div class="btn-group" role="group" aria-label="Screen actions">

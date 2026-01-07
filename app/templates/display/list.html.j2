@@ -13,6 +13,9 @@
                 <th>Type</th>
                 <th>Colors</th>
                 <th>Dimensions</th>
+                {% if config['ENABLE_DISPLAY_APPROVAL'] %}
+                    <th>Status</th>
+                {% endif %}
                 <th>Playlist</th>
                 <th>&nbsp;</th>
             </tr>
@@ -27,6 +30,14 @@
                     <td>{{ d.display_spec |display_spec }}</td>
                     <td>{{ d.color_spec |color_spec }}</td>
                     <td>{{ d.width }}x{{ d.height }}</td>
+                    {% if config['ENABLE_DISPLAY_APPROVAL'] %}
+                        <td>
+                            {{ d.status |status_label }}
+                            {% if d.status == 'pending' %}
+                                - Code: <code>{{ d.approval_code }}</code>
+                            {% endif %}
+                        </td>
+                    {% endif %}
                     <td>{{ (d.playlist.name if d.playlist else None) |typed_label }}</td>
                     <td>
                         <div class="btn-group" role="group" aria-label="Display actions">

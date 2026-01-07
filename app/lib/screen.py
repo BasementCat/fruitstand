@@ -28,6 +28,7 @@ class Screen:
     route: str = None
     config_form: Optional[FlaskForm] = None
     default_config: Dict[str, Any] = {}
+    _is_system: bool = False
 
     def __init__(self, display: Display, playlist: Playlist, playlist_screen: PlaylistScreen, screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any]):
         self.display = display
@@ -59,8 +60,6 @@ class Screen:
         })
         template = self.jinja_env.get_template(template_name)
         return template.render(**kwargs)
-
-
 
     @classmethod
     def get_path(cls):

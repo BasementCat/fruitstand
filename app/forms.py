@@ -1,3 +1,4 @@
+from flask import current_app
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, IntegerField, SubmitField, PasswordField, EmailField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Optional, NumberRange, ValidationError
@@ -5,7 +6,8 @@ from wtforms_sqlalchemy.fields import QuerySelectField
 import flask_login
 import pytz
 
-from app.models import Playlist, User
+from app.models import Playlist, User, Display
+from app.constants import DISP_STATUS
 
 
 class PlaylistEditForm(FlaskForm):
@@ -15,17 +17,33 @@ class PlaylistEditForm(FlaskForm):
     submit = SubmitField("Save Playlist")
 
 
-class DisplayEditForm(FlaskForm):
-    name = StringField('Display Name', validators=[DataRequired()])
-    playlist = QuerySelectField('Playlist',
-        validators=[Optional()],
-        query_factory=lambda: Playlist.query.order_by(Playlist.name.asc()),
-        get_pk=lambda o: o.id,
-        get_label=lambda o: o.name,
-        allow_blank=True,
-        blank_text="None",
-    )
-    submit = SubmitField("Save Display")
+def DisplayEditForm(obj=None, **kwargs):
+    class DisplayEditFormImpl(FlaskForm):
+        name = StringField('Display Name', validators=[DataRequired()])
+        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+            form_status = SelectField("Status", choices=[(k, v) for k, v in DISP_STATUS.items()], validators=[DataRequired()])
+        playlist = QuerySelectField('Playlist',
+            validators=[Optional()],
+            query_factory=lambda: Playlist.query.order_by(Playlist.name.asc()),
+            get_pk=lambda o: o.id,
+            get_label=lambda o: o.name,
+            allow_blank=True,
+            blank_text="None",
+        )
+        submit = SubmitField("Save Display")
+
+        def populate_obj(self, obj):
+            old_status = obj.status
+            super().populate_obj(obj)
+            if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+                if obj.status == 'pending' and old_status != 'pending':
+                    # status has changed from another status to pending so regenerate/set the code
+                    obj.approval_code = Display.generate_approval_code()
+                elif obj.status != 'pending':
+                    # has either been approved or rejected so clear the code
+                    obj.approval_code = None
+
+    return DisplayEditFormImpl(obj=obj, **kwargs)
 
 
 class UserLoginForm(FlaskForm):

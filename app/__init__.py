@@ -35,6 +35,7 @@ def create_app():
         app.config['SCREEN_IMPORTS'].append('app.screens.color_test')
     app.config['TIMEZONE'] = app.config.get('TIMEZONE', 'UTC')
     app.config['ENABLE_USERS'] = bool(app.config.get('ENABLE_USERS', False))
+    app.config['ENABLE_DISPLAY_APPROVAL'] = bool(app.config.get('ENABLE_DISPLAY_APPROVAL', False))
 
     Bootstrap(app)
     db.init_app(app)

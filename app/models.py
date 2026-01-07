@@ -5,15 +5,16 @@ import base64
 import json
 import os
 import hmac
+import random
 
-from flask import request
+from flask import request, current_app
 import arrow
 from sqlalchemy import event
 import sqlalchemy_utils as sau
 import slugify
 
 from app import db
-from app.constants import DISPLAY_SPEC, COLOR_SPEC
+from app.constants import DISPLAY_SPEC, COLOR_SPEC, DISP_STATUS
 from app.lib.user import login_user
 
 
@@ -188,6 +189,7 @@ class Screen(Base):
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
     present = db.Column(db.Boolean(), nullable=False, default=True)
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    system = db.Column(db.Boolean(), nullable=False, default=False)
     title = db.Column(db.UnicodeText(), nullable=False)
     description = db.Column(db.UnicodeText())
 
@@ -208,6 +210,7 @@ class Screen(Base):
                 db.session.add(screen_obj)
                 existing[screen_class.key] = screen_obj
             screen_obj.present = True
+            screen_obj.system = screen_class._is_system
             screen_obj.title = screen_class.title
             screen_obj.description = screen_class.description
         db.session.commit()
@@ -292,6 +295,8 @@ class Display(Base):
     __tablename__ = 'display'
     id = db.Column(db.BigInteger(), primary_key=True)
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
+    status = db.Column(sau.ChoiceType(choices=[(k, v) for k, v in DISP_STATUS.items()]), nullable=False, default='active', server_default='active')
+    approval_code = db.Column(db.Unicode(36))
     name = db.Column(db.UnicodeText(), nullable=False)
     created_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
     last_seen_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
@@ -303,6 +308,20 @@ class Display(Base):
     playlist = db.relationship(Playlist, backref='displays')
     last_playlist_screen_id = db.Column(db.BigInteger(), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_last_pls_id'))
     last_playlist_screen = db.relationship(PlaylistScreen)
+
+    # for forms to work
+    @property
+    def form_status(self):
+        return self.status.code
+
+    @form_status.setter
+    def form_status(self, value):
+        self.status = value
+
+    @classmethod
+    def generate_approval_code(cls):
+        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+            return str(random.randint(100000, 999999))
 
     @classmethod
     def sync(cls):
@@ -319,6 +338,8 @@ class Display(Base):
             create_params.update({
                 'key': key,
                 'name': key,
+                'status': 'pending' if current_app.config['ENABLE_DISPLAY_APPROVAL'] else 'active',
+                'approval_code': cls.generate_approval_code(),
             })
             display = cls.query.filter(cls.key == key).first()
             if display:
