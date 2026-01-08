@@ -14,7 +14,28 @@ bp = Blueprint('screen', __name__)
 def list():
     Screen.sync(ScreenBase.get_all().values())
 
-    return render_template('screen/list.html.j2', screens=Screen.all_by_key(), screen_classes=ScreenBase.get_all())
+    user_screens = []
+    system_screens = []
+    for s in Screen.all_by_key().values():
+        if s.system:
+            system_screens.append(s)
+        else:
+            user_screens.append(s)
+
+    screens = [
+        {
+            'title': None,
+            'screens': user_screens,
+            'allow_disable': True,
+        },
+        {
+            'title': 'System Screens',
+            'screens': system_screens,
+            'allow_disable': False,
+        },
+    ]
+
+    return render_template('screen/list.html.j2', screens=screens, screen_classes=ScreenBase.get_all())
 
 
 @bp.route('/toggle/<int:screen_id>', methods=['POST'])
@@ -22,10 +43,13 @@ def list():
 def toggle(screen_id):
     s = Screen.query.get(screen_id)
     if not s:
-        abort(404)
-
-    s.enabled = bool(int(request.form.get('enabled', 0)))
-    db.session.commit()
+        flash("Requested screen does not exist", 'danger')
+    elif s.system:
+        flash("System screens cannot be disabled", 'danger')
+    else:
+        s.enabled = bool(int(request.form.get('enabled', 0)))
+        db.session.commit()
+        flash("{} screen {}".format('Enabled' if s.enabled else 'Disabled', s.title), 'success' if s.enabled else 'warning')
 
     return redirect(url_for('.list'))
 

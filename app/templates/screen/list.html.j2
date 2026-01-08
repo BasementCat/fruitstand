@@ -3,38 +3,49 @@
 {% set title = 'Screens' %}
 
 {% block main %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Key</th>
-                <th>Present?</th>
-                <th>Enabled?</th>
-                <th>System?</th>
-                <th>&nbsp;</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in screens.values() %}
-                <tr>
-                    <td>{{ s.title }}</td>
-                    <td>{{ s.description |typed_label }}</td>
-                    <td>{{ s.key }}</td>
-                    <td>{{ s.present |typed_label }}</td>
-                    <td>{{ s.enabled |typed_label }}</td>
-                    <td>{{ s.system |typed_label(false_is_danger=False) }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('.toggle', screen_id=s.id, _method='POST') }}">
-                            <div class="btn-group" role="group" aria-label="Screen actions">
-                                <button type="submit" name="enabled" value="1" class="btn btn-sm btn-success {{ ('disabled' if s.enabled else '') if s.present else 'disabled' }}">Enable</button>
-                                <button type="submit" name="enabled" value="0" class="btn btn-sm btn-danger {{ '' if s.enabled else 'disabled' }}">Disable</button>
-                                <a href="{{ url_for('.configure', screen_id=s.id) }}" class="btn btn-sm btn-primary {{ '' if s.present and screen_classes[s.key].config_form else 'disabled' }}">Configure</a>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="col-xs-12">
+        {% for meta in screens %}
+            {% if meta.title %}
+                <h3>{{ meta.title }}</h3>
+            {% endif %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Key</th>
+                        <th>Present?</th>
+                        {% if meta.allow_disable %}
+                            <th>Enabled?</th>
+                        {% endif %}
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in meta.screens %}
+                        <tr>
+                            <td>{{ s.title }}</td>
+                            <td>{{ s.description |typed_label }}</td>
+                            <td>{{ s.key }}</td>
+                            <td>{{ s.present |typed_label }}</td>
+                            {% if meta.allow_disable %}
+                                <td>{{ s.enabled |typed_label }}</td>
+                            {% endif %}
+                            <td>
+                                <form method="POST" action="{{ url_for('.toggle', screen_id=s.id, _method='POST') }}">
+                                    <div class="btn-group" role="group" aria-label="Screen actions">
+                                        {% if meta.allow_disable %}
+                                            <button type="submit" name="enabled" value="1" class="btn btn-sm btn-success {{ ('disabled' if s.enabled else '') if s.present else 'disabled' }}">Enable</button>
+                                            <button type="submit" name="enabled" value="0" class="btn btn-sm btn-danger {{ '' if s.enabled else 'disabled' }}">Disable</button>
+                                        {% endif %}
+                                        <a href="{{ url_for('.configure', screen_id=s.id) }}" class="btn btn-sm btn-primary {{ '' if s.present and screen_classes[s.key].config_form else 'disabled' }}">Configure</a>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </div>
 {% endblock %}
