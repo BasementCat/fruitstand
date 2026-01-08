@@ -30,7 +30,9 @@ def create_app():
     app.config['SCREEN_IMPORTS'] += [
         'app.screens.zen_quotes',
         'app.screens.openweather',
+        # Internal/system screens
         'app.screens.approval_code',
+        'app.screens.error',
     ]
     if app.debug:
         app.config['SCREEN_IMPORTS'].append('app.screens.color_test')

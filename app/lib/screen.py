@@ -107,14 +107,20 @@ class Screen:
 
         system = False
         screen_cls_key = None
+        extra_context = {}
         if current_app.config['ENABLE_DISPLAY_APPROVAL']:
             if display.status == 'pending':
                 system = True
                 screen_cls_key = 'fruitstand/approval_code'
             elif display.status == 'disapproved':
-                # TODO: if display.status == disapproved, display that screen
                 system = True
-                screen_cls_key = None
+                screen_cls_key = 'fruitstand/error'
+                extra_context.update({
+                    'error': {
+                        'title': "Disapproved",
+                        'message': "This screen is not approved.",
+                    }
+                })
 
         playlist = playlist_screen = None
         playlist_config = {}
@@ -140,11 +146,13 @@ class Screen:
                 display.id
             ))
 
-        context = {'metrics': {}}
-        try:
-            context['metrics'] = json.loads(request.args.get('metrics', ''))
-        except:
-            pass
+        context = {'metrics': {}, 'extra': extra_context}
+        for k in ('metrics', 'extra'):
+            # JSON args
+            try:
+                context[k].update(json.loads(request.args.get(k, '{}')))
+            except:
+                pass
         context.update(display.get_context())
 
         return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context, system=system)
