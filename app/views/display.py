@@ -83,8 +83,32 @@ def render():
 @bp.route('/list', methods=['GET'])
 @login_required
 def list():
-    displays = Display.query.order_by(Display.name.asc()).all()
-    return render_template('display/list.html.j2', displays=displays)
+    raw_displays = Display.query.order_by(Display.name.asc()).all()
+    if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+        displays = {
+            'pending': {
+                'title': 'Pending',
+                'displays': [],
+            },
+            'active': {
+                'title': 'Active',
+                'displays': [],
+            },
+            'disapproved': {
+                'title': 'Disapproved',
+                'displays': [],
+            },
+        }
+        for d in raw_displays:
+            displays[d.status]['displays'].append(d)
+    else:
+        displays = {
+            'all': {
+                'title': None,
+                'displays': raw_displays
+            }
+        }
+    return render_template('display/list.html.j2', displays=displays.values())
 
 
 @bp.route('/edit/<int:display_id>', methods=['GET', 'POST'])
