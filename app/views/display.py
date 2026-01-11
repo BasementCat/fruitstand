@@ -134,10 +134,12 @@ def edit(display_id):
 def demo():
     playlists = Playlist.query.order_by(Playlist.name.asc()).all()
     screens = Screen.query.order_by(Screen.title.asc()).all()
+    secrets = DisplaySecret.query.order_by(DisplaySecret.name.asc()).all()
 
     return render_template('display/demo.html.j2',
         playlists=playlists,
         screens=screens,
+        secrets=secrets,
         DISPLAY_SPEC=DISPLAY_SPEC,
         COLOR_SPEC=COLOR_SPEC,
         metric_inputs=Metric.get_all_demo_inputs(),
