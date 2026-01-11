@@ -22,6 +22,9 @@
                             {% if config['ENABLE_DISPLAY_APPROVAL'] %}
                                 <th>Status</th>
                             {% endif %}
+                            {% if config['ENABLE_DISPLAY_AUTH'] %}
+                                <th>Auth</th>
+                            {% endif %}
                             <th>Playlist</th>
                             <th>&nbsp;</th>
                         </tr>
@@ -41,6 +44,15 @@
                                         {{ d.status |status_label }}
                                         {% if d.status == 'pending' %}
                                             - Code: <code>{{ d.approval_code }}</code>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                                {% if config['ENABLE_DISPLAY_AUTH'] %}
+                                    <td>
+                                        {% if d.display_secret %}
+                                            {{ d.display_secret.status |status_label }}
+                                        {% else %}
+                                            {{ 'Not Present' |label('danger')}}
                                         {% endif %}
                                     </td>
                                 {% endif %}

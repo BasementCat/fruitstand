@@ -54,11 +54,11 @@ def typed_label(value, false_is_danger=True):
 @jfilter()
 def status_label(value):
     lcls = 'default'
-    if value == 'pending':
+    if value in ('pending', 'deprecated'):
         lcls = 'warning'
     elif value == 'active':
         lcls = 'success'
-    elif value == 'disapproved':
+    elif value in ('disapproved', 'disabled'):
         lcls = 'danger'
     return label(value, level=lcls)
 

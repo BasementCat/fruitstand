@@ -5,19 +5,20 @@ import uuid
 import urllib.parse
 import subprocess
 from io import BytesIO
+import functools
 
-from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file, current_app
+from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file, current_app, jsonify
 import arrow
 import requests
 
 from app import db
-from app.models import Display, Playlist, Screen
+from app.models import Display, Playlist, Screen, DisplaySecret
 from app.constants import DISPLAY_SPEC, COLOR_SPEC
-from app.forms import DisplayEditForm
+from app.forms import DisplayEditForm, DisplaySecretEditForm
 from app.lib.metric import Metric
 from app.lib.screen import Screen as BaseScreen
 from app.lib.image import convert_colors
-from app.lib.user import login_required
+from app.lib.user import login_required, admin_required
 
 
 bp = Blueprint('display', __name__)
@@ -166,3 +167,69 @@ def demo_params():
             out[mc.param] = v
 
     return '&'.join(map(lambda v: '='.join(v), out.items())), {'content-type': 'text/plain'}
+
+
+def display_auth_required(callback):
+    @functools.wraps(callback)
+    def display_auth_required_wrap(*a, **ka):
+        if not current_app.config['ENABLE_DISPLAY_AUTH']:
+            abort(404)
+        return callback(*a, **ka)
+    return display_auth_required_wrap
+
+
+@bp.route('/secrets', methods=['GET'])
+@bp.route('/secrets/list', methods=['GET'])
+@display_auth_required
+@admin_required
+def secret_list():
+    secrets = DisplaySecret.query.all()
+    return render_template('display/secrets/list.html.j2', secrets=secrets)
+
+
+@bp.route('/secrets/edit/<int:secret_id>', methods=['GET', 'POST'])
+@bp.route('/secrets/edit/new', methods=['GET', 'POST'])
+@display_auth_required
+@admin_required
+def secret_edit(secret_id=None):
+    secret = None
+    if secret_id:
+        secret = DisplaySecret.query.get(secret_id)
+        if not secret:
+            flash("The requested secret was not found", 'danger')
+            return redirect(url_for('.secret_list'))
+
+    form = DisplaySecretEditForm(obj=secret)
+    if form.validate_on_submit():
+        secret = secret or DisplaySecret()
+        form.populate_obj(secret)
+        db.session.add(secret)
+        db.session.commit()
+        if secret_id:
+            flash(f"Saved changes to secret {secret.name}.", 'info')
+        else:
+            flash(f"Created new secret {secret.name}.", 'success')
+        return redirect(url_for('.secret_list'))
+
+    if secret and len(secret.displays):
+        flash("This secret is currently in use; if disabled, it will no longer be treated as valid.", 'warning')
+
+    return render_template('display/secrets/edit.html.j2', secret=secret, form=form)
+
+
+@bp.route('/secrets/delete/<int:secret_id>', methods=['GET', 'POST'])
+@display_auth_required
+@admin_required
+def secret_delete(secret_id):
+    secret = DisplaySecret.query.get(secret_id)
+    if not secret:
+        flash("The requested secret was not found", 'danger')
+        return redirect(url_for('.secret_list'))
+
+    if request.method == 'POST':
+        db.session.delete(secret)
+        db.session.commit()
+        flash(f"Deleted secret {secret.name}", 'danger')
+        return redirect(url_for('.secret_list'))
+
+    return render_template('display/secrets/delete.html.j2', secret=secret)

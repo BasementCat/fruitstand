@@ -60,6 +60,9 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {{ nav_link('display.demo', 'Demo Display', prefix='display.demo', icon='display') }}
+                    {% if config['ENABLE_DISPLAY_AUTH'] and (not users_enabled() or (current_user.is_authenticated and current_user.is_admin)) %}
+                        {{ nav_link('display.secret_list', 'Secret Keys', prefix='display.secret', icon='key') }}
+                    {% endif %}
                     {% if users_enabled() %}
                         {% if current_user.is_authenticated %}
                             {% call nav_link(None, current_user.username, prefix='user.', icon='user', dropdown=True) %}

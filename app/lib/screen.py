@@ -108,7 +108,23 @@ class Screen:
         system = False
         screen_cls_key = None
         extra_context = {}
-        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+
+        if current_app.config['ENABLE_DISPLAY_AUTH']:
+            # Display must have passed a valid secret key
+            if not (display.display_secret and display.display_secret.status != 'disabled'):
+                system = True
+                screen_cls_key = 'fruitstand/error'
+                extra_context.update({
+                    'error': {
+                        'title': "Unauthenticated",
+                        'message': "This screen is not authenticated.",
+                    }
+                })
+
+        # If we've already set the class to load because of the above error, then skip this part
+        # auth takes precedence over approval
+        if not screen_cls_key and current_app.config['ENABLE_DISPLAY_APPROVAL']:
+            # Display must have been approved by someone prior to rendering
             if display.status == 'pending':
                 system = True
                 screen_cls_key = 'fruitstand/approval_code'

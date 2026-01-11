@@ -37,6 +37,8 @@ Configuration may also be passed by setting environment variables.  All supporte
   * It's highly recommended to enable this if hosting Fruitstand outside of a local network.
 * **FRUITSTAND_ENABLE_DISPLAY_APPROVAL** - Enable display approval.
   * When enabled, any new screens require approval before they will display any content.
+* **FRUITSTAND_ENABLE_DISPLAY_AUTH** - Enable display authentication
+  * When enabled, screens must provide a valid secret key (via the `sk` parameter) before they will display any content.
 
 ## Running
 

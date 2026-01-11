@@ -59,3 +59,9 @@ DISP_STATUS = {
     'active': 'Active',
     'disapproved': 'Disapproved',
 }
+
+SECRET_STATUS = {
+    'active': 'Active',
+    'deprecated': 'Deprecated',
+    'disabled': 'Disabled',
+}

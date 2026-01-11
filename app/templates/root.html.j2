@@ -34,9 +34,11 @@
             </div>
         {% endif %}
     {% endwith %}
-    <div class="container{{ fc }}">
-        <div class="row{{ fc }}">
-            {% block main %}{% endblock %}
+    {% block main_container %}
+        <div class="container{{ fc }}">
+            <div class="row{{ fc }}">
+                {% block main %}{% endblock %}
+            </div>
         </div>
-    </div>
+    {% endblock %}
 {% endblock %}
