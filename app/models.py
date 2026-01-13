@@ -125,7 +125,7 @@ class UserPassword:
 
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.BigInteger(), primary_key=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     username = db.Column(db.UnicodeText(), nullable=False)
     username_slug = db.Column(db.Unicode(128), nullable=False, unique=True)
     email = db.Column(db.Unicode(256), nullable=False)
@@ -185,7 +185,7 @@ def update_user_slug(target, value, oldvalue, initiator):
 
 class Screen(Base):
     __tablename__ = 'screen'
-    id = db.Column(db.BigInteger(), primary_key=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
     present = db.Column(db.Boolean(), nullable=False, default=True)
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
@@ -218,7 +218,7 @@ class Screen(Base):
 
 class Playlist(Base):
     __tablename__ = 'playlist'
-    id = db.Column(db.BigInteger(), primary_key=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     name = db.Column(db.UnicodeText(), nullable=False)
     description = db.Column(db.UnicodeText())
     default_refresh_interval = db.Column(db.Integer(), nullable=False, default=1800)
@@ -226,21 +226,21 @@ class Playlist(Base):
 
 class PlaylistScreen(Base):
     __tablename__ = 'playlist_screen'
-    id = db.Column(db.BigInteger(), primary_key=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     order = db.Column(db.Integer(), nullable=False, default=0)
     refresh_interval = db.Column(db.Integer())
-    playlist_id = db.Column(db.BigInteger(), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_playlist'), nullable=False)
+    playlist_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_playlist'), nullable=False)
     playlist = db.relationship(Playlist, backref=db.backref('playlist_screens', cascade='all,delete', order_by=order.asc()))
-    screen_id = db.Column(db.BigInteger(), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_screen'), nullable=False)
+    screen_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_pls_screen'), nullable=False)
     screen = db.relationship(Screen, backref=db.backref('playlist_screens', cascade='all,delete', order_by=order.asc()))
 
 
 class Config(Base):
     __tablename__ = 'config'
-    id = db.Column(db.BigInteger(), primary_key=True)
-    screen_id = db.Column(db.BigInteger(), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_config_screen'))
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
+    screen_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(Screen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_config_screen'))
     screen = db.relationship(Screen, backref=db.backref('config', cascade='all,delete'))
-    playlist_screen_id = db.Column(db.BigInteger(), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_config_playlist_screen'))
+    playlist_screen_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='CASCADE', name='fk_config_playlist_screen'))
     playlist_screen = db.relationship(PlaylistScreen, backref=db.backref('config', cascade='all,delete'))
     key = db.Column(db.Unicode(64), nullable=False)
     value_serialized = db.Column(db.Text(), nullable=False)
@@ -293,7 +293,7 @@ class Config(Base):
 
 class DisplaySecret(Base):
     __tablename__ = 'display_secret'
-    id = db.Column(db.BigInteger(), primary_key=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     name = db.Column(db.UnicodeText(), nullable=False)
     key = db.Column(db.String(128), nullable=False, unique=True)
     status = db.Column(sau.ChoiceType(choices=[(k, v) for k, v in SECRET_STATUS.items()]), nullable=False, default='active', server_default='active')
@@ -310,7 +310,7 @@ class DisplaySecret(Base):
 
 class Display(Base):
     __tablename__ = 'display'
-    id = db.Column(db.BigInteger(), primary_key=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
     status = db.Column(sau.ChoiceType(choices=[(k, v) for k, v in DISP_STATUS.items()]), nullable=False, default='active', server_default='active')
     approval_code = db.Column(db.Unicode(36))
@@ -321,11 +321,11 @@ class Display(Base):
     color_spec = db.Column(sau.ChoiceType(choices=[(k, v['name']) for k, v in COLOR_SPEC.items()]), nullable=False)
     width = db.Column(db.Integer(), nullable=False, default=0)
     height = db.Column(db.Integer(), nullable=False, default=0)
-    playlist_id = db.Column(db.BigInteger(), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_playlist'))
+    playlist_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_playlist'))
     playlist = db.relationship(Playlist, backref='displays')
-    last_playlist_screen_id = db.Column(db.BigInteger(), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_last_pls_id'))
+    last_playlist_screen_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_last_pls_id'))
     last_playlist_screen = db.relationship(PlaylistScreen)
-    display_secret_id = db.Column(db.BigInteger(), db.ForeignKey(DisplaySecret.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_display_secret_id'))
+    display_secret_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(DisplaySecret.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_display_secret_id'))
     display_secret = db.relationship(DisplaySecret, backref='displays')
 
     # for forms to work
