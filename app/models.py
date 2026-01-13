@@ -1,16 +1,185 @@
-from typing import Any, Optional, Union, Dict, Tuple
+from typing import Any, Optional, Union, Dict, Tuple, Self, Literal
 import pickle
+import hashlib
+import base64
+import json
+import os
+import hmac
 
 from flask import request
 import arrow
+from sqlalchemy import event
 import sqlalchemy_utils as sau
+import slugify
 
 from app import db
 from app.constants import DISPLAY_SPEC, COLOR_SPEC
+from app.lib.user import login_user
 
 
 class Base(db.Model):
     __abstract__ = True
+
+
+class UserPassword:
+    """\
+    Represents a user password hash and supports verification.  This could
+    relatively easily be extended to support multiple hashing algorithms and
+    configurations
+    """
+
+    def __init__(
+        self,
+        sl: int=16,  # Salt length
+        s: Optional[bytes]=None,  # Salt, generated if not specified
+        n: int=2**14,  # Memory cost, 16MB
+        r: int=8,  # block size, 1024 bytes
+        p: int=5,  # parallelism
+        raw: Optional[bytes]=None,  # Raw hashed value
+    ):
+        # Currently, the only supported algorithm is scrypt and the parameters are not configurable
+        # This should be good for most use cases
+        # https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#scrypt
+        self.sl = sl
+        self.s = s or os.urandom(self.sl)
+        self.n = n
+        self.r = r
+        self.p = p
+        self.raw = raw
+
+    @property
+    def as_string(self) -> str:
+        """\
+        Return a storable representation of this hash with the parameters
+        """
+
+        return json.dumps({
+            'sl': self.sl,
+            's': base64.b64encode(self.s).decode('ascii'),
+            'n': self.n,
+            'r': self.r,
+            'p': self.p,
+            'raw': base64.b64encode(self.raw).decode('ascii'),
+        })
+
+    @classmethod
+    def from_string(cls, value: str) -> Self:
+        """\
+        Given the stored string representation, return an instance with those
+        same parameters set
+        """
+
+        props = json.loads(value)
+        for k in ('s', 'raw'):
+            props[k] = base64.b64decode(props[k].encode('ascii'))
+        return cls(**props)
+
+    def hash(self, value: Union[str, bytes]) -> bytes:
+        """\
+        Hash the given password string using the stored parameters
+        """
+
+        if isinstance(value, str):
+            value = value.encode('utf-8')
+
+        return hashlib.scrypt(
+            value,
+            salt=self.s,
+            n=self.n,
+            r=self.r,
+            p=self.p,
+        )
+
+    def set_hash(self, value: Union[str, bytes]):
+        """\
+        Hash the given password string and store it
+        """
+
+        self.raw = self.hash(value)
+
+    def compare_hash(self, value: Union[str, bytes]) -> bool:
+        """\
+        Hash the given password string and compare it to the stored one
+        """
+
+        given_hash = self.hash(value)
+        return hmac.compare_digest(given_hash, self.raw)
+
+    def __str__(self) -> str:
+        """\
+        Used in cases where this object would be displayed by accident
+        """
+
+        return '********'
+
+    def __eq__(self, other: Union[Self, str, bytes]) -> bool:
+        """\
+        Determine if this hash is equal to another value
+        """
+
+        if isinstance(other, self.__class__):
+            return self.compare_hash(other.raw)
+        return self.compare_hash(other)
+
+
+class User(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.BigInteger(), primary_key=True)
+    username = db.Column(db.UnicodeText(), nullable=False)
+    username_slug = db.Column(db.Unicode(128), nullable=False, unique=True)
+    email = db.Column(db.Unicode(256), nullable=False)
+    raw_password = db.Column(db.Text(), nullable=False)
+    is_admin = db.Column(db.Boolean(), nullable=False, default=False, server_default='0')
+    is_enabled = db.Column(db.Boolean(), nullable=False, default=True, server_default='1')
+    timezone = db.Column(db.Text(), nullable=False, default='UTC', server_default='UTC')
+
+    @property
+    def password(self) -> UserPassword:
+        return UserPassword.from_string(self.raw_password)
+
+    @password.setter
+    def password(self, value: str):
+        pw = UserPassword()
+        pw.set_hash(value)
+        self.raw_password = pw.as_string
+
+    @classmethod
+    def get_by_username(cls, username: str, return_query: bool=False):
+        slug = slugify.slugify(username)
+        query = cls.query.filter(cls.username_slug == slug)
+        if return_query:
+            return query
+        return query.first()
+
+    @classmethod
+    def login(cls, username: str, password: str, **kwargs) -> Union[Self, Literal[False]]:
+        user = cls.get_by_username(username)
+        if user and user.password == password:
+            if login_user(user, **kwargs):
+                return user
+        return False
+
+    # properties required for flask-login
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return self.is_enabled
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
+
+@event.listens_for(User.username, 'set')
+@event.listens_for(User.username, 'modified')
+def update_user_slug(target, value, oldvalue, initiator):
+    target.username_slug = slugify.slugify(value)
 
 
 class Screen(Base):

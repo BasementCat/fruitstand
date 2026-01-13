@@ -1,0 +1,42 @@
+{% extends "bootstrap/base.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}
+
+{% block title %}{% if title is defined and title %}{{ title }} - {% endif %}Fruitstand{% endblock %}
+
+{% block content %}
+    {% set fc = '-fluid' if main_fluid is defined and main_fluid else '' %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages or (title is defined and title) %}
+            <div class="container{{ fc }}">
+                <div class="row{{ fc }}">
+                    <div class="col-xs-12">
+                        {% if (title is defined and title) %}
+                            <h1>{{ title }}</h1>
+                        {% endif %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'warning' if category == 'message' else category }}" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+    <div class="container{{ fc }}">
+        <div class="row{{ fc }}">
+            {% block main %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

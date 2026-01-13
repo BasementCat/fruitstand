@@ -17,6 +17,7 @@ from app.forms import DisplayEditForm
 from app.lib.metric import Metric
 from app.lib.screen import Screen as BaseScreen
 from app.lib.image import convert_colors
+from app.lib.user import login_required
 
 
 bp = Blueprint('display', __name__)
@@ -77,12 +78,14 @@ def render():
 
 @bp.route('/', methods=['GET'])
 @bp.route('/list', methods=['GET'])
+@login_required
 def list():
     displays = Display.query.order_by(Display.name.asc()).all()
     return render_template('display/list.html.j2', displays=displays)
 
 
 @bp.route('/edit/<int:display_id>', methods=['GET', 'POST'])
+@login_required
 def edit(display_id):
     display = Display.query.get(display_id)
     if not display:
@@ -99,6 +102,7 @@ def edit(display_id):
 
 
 @bp.route('/demo', methods=['GET'])
+@login_required
 def demo():
     playlists = Playlist.query.order_by(Playlist.name.asc()).all()
     screens = Screen.query.order_by(Screen.title.asc()).all()
@@ -114,6 +118,7 @@ def demo():
 
 
 @bp.route('/demo/params', methods=['POST'])
+@login_required
 def demo_params():
     data = {}
     for k, v in request.form.items():

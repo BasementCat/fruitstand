@@ -1,0 +1,10 @@
+{% extends "root.html.j2" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% set title = "Log In" %}
+
+{% block main %}
+    <div class="col-xs-12">
+        {{ wtf.quick_form(form, button_map={'submit': 'primary'}) }}
+    </div>
+{% endblock %}

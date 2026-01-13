@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, abort, redirect, url_for, request,
 from app.models import Screen, PlaylistScreen, Config, Playlist
 from app.forms import PlaylistEditForm
 from app.lib.screen import Screen as ScreenBase
+from app.lib.user import login_required
 from app import db
 
 
@@ -11,6 +12,7 @@ bp = Blueprint('playlist', __name__)
 
 @bp.route('/', methods=['GET'])
 @bp.route('/list', methods=['GET'])
+@login_required
 def list():
     playlists = Playlist.query.order_by(Playlist.name.asc())
     return render_template('playlist/list.html.j2', playlists=playlists)
@@ -18,6 +20,7 @@ def list():
 
 @bp.route('/edit/new', methods=['GET', 'POST'])
 @bp.route('/edit/<int:playlist_id>', methods=['GET', 'POST'])
+@login_required
 def edit(playlist_id=None):
     playlist = None
     if playlist_id:
@@ -38,6 +41,7 @@ def edit(playlist_id=None):
 
 
 @bp.route('/edit/<int:playlist_id>/screens', methods=['GET', 'POST'])
+@login_required
 def edit_screens(playlist_id):
     playlist = Playlist.query.get(playlist_id)
     if not playlist:
@@ -120,6 +124,7 @@ def edit_screens(playlist_id):
 
 
 @bp.route('/delete/<int:playlist_id>', methods=['GET', 'POST'])
+@login_required
 def delete(playlist_id):
     playlist = Playlist.query.get(playlist_id)
     if not playlist:
