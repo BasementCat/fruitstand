@@ -49,14 +49,14 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-12 col-md-6">
+            <div class="col-xs-12 col-sm-6 col-md-4">
                 <h3>Basics</h3>
                 <label class="form-label">
                     Key
                     <input type="text" id="dd_key" class="form-control" />
                 </label>
             </div>
-            <div class="col-sm-12 col-md-6">
+            <div class="col-xs-12 col-sm-6 col-md-4">
                 <h3>Playlist/Screen</h3>
                 <label class="form-label">
                     Playlist/Screen
@@ -71,6 +71,28 @@
                             </optgroup>
                         {% endfor %}
                     </select>
+                </label>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-4">
+                <h3>Secret Key</h3>
+                {% if not config['ENABLE_DISPLAY_AUTH'] %}
+                    <p class="help-block">
+                        Display auth is not enabled; the selected key will have no effect.
+                    </p>
+                {% endif %}
+                <label class="form-label">
+                    Select Existing
+                    <select id="dd_sk_sel" class="form-select">
+                        <option value="">None/Manual</option>
+                        {% for s in secrets %}
+                            <option value="{{ s.key }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="form-label">
+                    Manual
+                    <br>
+                    <input type="text" id="dd_sk" class="form-control" />
                 </label>
             </div>
         </div>
@@ -259,6 +281,8 @@
 
             const i_dd_key = document.getElementById('dd_key');
             const i_dd_playlist_screen = document.getElementById('dd_playlist_screen');
+            const i_dd_sk_sel = document.getElementById('dd_sk_sel');
+            const i_dd_sk = document.getElementById('dd_sk');
             const i_dd_size = document.getElementById('dd_size');
             const i_dd_width = document.getElementById('dd_width');
             const i_dd_height = document.getElementById('dd_height');
@@ -297,6 +321,7 @@
 
                 let parts = [
                     ['k', data['key']],
+                    ['sk', data['sk']],
                     ['w', data['width']],
                     ['h', data['height']],
                     ['cs', data['color_spec']],
@@ -319,6 +344,11 @@
                 const pls_data = i_dd_playlist_screen.value.split(';').map(v => v.split('-')[1]).map(v => parseInt(v));
                 data['playlist'] = pls_data[0] || null;
                 data['playlist_screen'] = pls_data[1] || null;
+                if (i_dd_sk_sel.value) {
+                    data['sk'] = i_dd_sk_sel.value;
+                } else {
+                    data['sk'] = i_dd_sk.value || null;
+                }
                 if (i_dd_size.value) {
                     const s_data = i_dd_size.value.split('x').map(v => parseInt(v));
                     data['width'] = s_data[0];
@@ -347,6 +377,17 @@
             const update_form_from_data = function() {
                 i_dd_key.value = data['key'];
                 i_dd_playlist_screen.value = 'pl-' + (data['playlist'] || 0) + ';s-' + (data['playlist_screen'] || 0);
+                if (data['sk']) {
+                    if (i_dd_sk_sel.querySelector('[value="' + data['sk'] + '"]')) {
+                        i_dd_sk_sel.value = data['sk'];
+                        i_dd_sk.value = '';
+                    } else {
+                        i_dd_sk_sel.value = '';
+                        i_dd_sk.value = data['sk'];
+                    }
+                } else {
+                    i_dd_sk_sel.value = i_dd_sk.value = '';
+                }
                 i_dd_width.value = data['width'];
                 i_dd_height.value = data['height'];
                 i_dd_color_spec.value = data['color_spec'];

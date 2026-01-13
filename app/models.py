@@ -5,15 +5,16 @@ import base64
 import json
 import os
 import hmac
+import random
 
-from flask import request
+from flask import request, current_app
 import arrow
 from sqlalchemy import event
 import sqlalchemy_utils as sau
 import slugify
 
 from app import db
-from app.constants import DISPLAY_SPEC, COLOR_SPEC
+from app.constants import DISPLAY_SPEC, COLOR_SPEC, DISP_STATUS, SECRET_STATUS
 from app.lib.user import login_user
 
 
@@ -188,6 +189,7 @@ class Screen(Base):
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
     present = db.Column(db.Boolean(), nullable=False, default=True)
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    system = db.Column(db.Boolean(), nullable=False, default=False)
     title = db.Column(db.UnicodeText(), nullable=False)
     description = db.Column(db.UnicodeText())
 
@@ -204,10 +206,11 @@ class Screen(Base):
         for screen_class in screen_classes:
             screen_obj = existing.get(screen_class.key)
             if not screen_obj:
-                screen_obj = cls(key=screen_class.key)
+                screen_obj = cls(key=screen_class.key, enabled=screen_class._is_system)
                 db.session.add(screen_obj)
                 existing[screen_class.key] = screen_obj
             screen_obj.present = True
+            screen_obj.system = screen_class._is_system
             screen_obj.title = screen_class.title
             screen_obj.description = screen_class.description
         db.session.commit()
@@ -288,10 +291,29 @@ class Config(Base):
         db.session.commit()
 
 
+class DisplaySecret(Base):
+    __tablename__ = 'display_secret'
+    id = db.Column(db.BigInteger(), primary_key=True)
+    name = db.Column(db.UnicodeText(), nullable=False)
+    key = db.Column(db.String(128), nullable=False, unique=True)
+    status = db.Column(sau.ChoiceType(choices=[(k, v) for k, v in SECRET_STATUS.items()]), nullable=False, default='active', server_default='active')
+
+    # for forms to work
+    @property
+    def form_status(self):
+        return self.status.code
+
+    @form_status.setter
+    def form_status(self, value):
+        self.status = value
+
+
 class Display(Base):
     __tablename__ = 'display'
     id = db.Column(db.BigInteger(), primary_key=True)
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
+    status = db.Column(sau.ChoiceType(choices=[(k, v) for k, v in DISP_STATUS.items()]), nullable=False, default='active', server_default='active')
+    approval_code = db.Column(db.Unicode(36))
     name = db.Column(db.UnicodeText(), nullable=False)
     created_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
     last_seen_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
@@ -303,22 +325,46 @@ class Display(Base):
     playlist = db.relationship(Playlist, backref='displays')
     last_playlist_screen_id = db.Column(db.BigInteger(), db.ForeignKey(PlaylistScreen.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_last_pls_id'))
     last_playlist_screen = db.relationship(PlaylistScreen)
+    display_secret_id = db.Column(db.BigInteger(), db.ForeignKey(DisplaySecret.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_display_secret_id'))
+    display_secret = db.relationship(DisplaySecret, backref='displays')
+
+    # for forms to work
+    @property
+    def form_status(self):
+        return self.status.code
+
+    @form_status.setter
+    def form_status(self, value):
+        self.status = value
+
+    @classmethod
+    def generate_approval_code(cls):
+        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+            return str(random.randint(100000, 999999))
 
     @classmethod
     def sync(cls):
         key = request.args.get('k')
         if key:
+            sk = request.args.get('sk')
+            secret = None
+            if sk:
+                # always update; we don't care about whether it exists or status
+                secret = DisplaySecret.query.filter(DisplaySecret.key == sk).first()
             update_params = {
                 'last_seen_at': arrow.utcnow(),
                 'display_spec': request.args.get('ds'),
                 'color_spec': request.args.get('cs'),
                 'width': request.args.get('w'),
                 'height': request.args.get('h'),
+                'display_secret': secret,
             }
             create_params = dict(update_params)
             create_params.update({
                 'key': key,
                 'name': key,
+                'status': 'pending' if current_app.config['ENABLE_DISPLAY_APPROVAL'] else 'active',
+                'approval_code': cls.generate_approval_code(),
             })
             display = cls.query.filter(cls.key == key).first()
             if display:

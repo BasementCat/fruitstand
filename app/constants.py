@@ -53,3 +53,15 @@ COLOR_SPEC = {
         'palette': None,
     },
 }
+
+DISP_STATUS = {
+    'pending': 'Pending Approval',
+    'active': 'Active',
+    'disapproved': 'Disapproved',
+}
+
+SECRET_STATUS = {
+    'active': 'Active',
+    'deprecated': 'Deprecated',
+    'disabled': 'Disabled',
+}
