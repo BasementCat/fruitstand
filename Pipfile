@@ -22,6 +22,7 @@ pillow = "*"
 
 [dev-packages]
 pudb = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.13"

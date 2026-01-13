@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict, Self
+from typing import Optional, Any, Dict, Self, Tuple
 import json
 import os
 import inspect
@@ -89,33 +89,61 @@ class Screen:
         app.register_blueprint(cls.blueprint, url_prefix='/screens/render/' + cls.key)
 
     @classmethod
-    def load_for_render(cls, display_id: Optional[int]=None, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Self:
+    def _load_display(cls, display_id: Optional[int]=None) -> Display:
         if display_id:
             display = Display.query.get(display_id)
         else:
             display = Display.sync()
+
         if not display:
             raise DisplayNotFound(display_id)
 
+        return display
+
+    @classmethod
+    def _load_playlist_and_playlist_screen(cls, display: Display, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Tuple[Playlist, PlaylistScreen]:
         playlist, playlist_screen = display.get_playlist_screen(
             playlist_id=playlist_id,
             playlist_screen_id=playlist_screen_id,
         )
         if not (playlist and playlist_screen):
             raise PlaylistNotFound((playlist_id, playlist_screen_id, display.id))
+        return playlist, playlist_screen
 
+    @classmethod
+    def _load_screen_class(cls, display: Display, playlist: Playlist, playlist_screen: PlaylistScreen) -> Self:
         screen_cls = cls.get(playlist_screen.screen.key)
         if not screen_cls:
             raise ScreenNotFound((playlist_screen.screen.key, playlist.id, playlist_screen.id, display.id))
+        return screen_cls
 
-        playlist_config = Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen)
-        screen_config = Config.load(screen=playlist_screen.screen)
+    @classmethod
+    def _load_config(cls, playlist_screen: PlaylistScreen) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        return (
+            Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen),
+            Config.load(screen=playlist_screen.screen),
+        )
 
+    @classmethod
+    def _load_context(cls, display: Display) -> dict:
         context = {'metrics': {}}
         try:
             context['metrics'] = json.loads(request.args.get('metrics', ''))
         except:
             pass
         context.update(display.get_context())
+        return context
+
+    @classmethod
+    def load_for_render(cls, display_id: Optional[int]=None, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Self:
+        display = cls._load_display(display_id=display_id)
+        playlist, playlist_screen = cls._load_playlist_and_playlist_screen(
+            display,
+            playlist_id=playlist_id,
+            playlist_screen_id=playlist_screen_id,
+        )
+        screen_cls = cls._load_screen_class(display, playlist, playlist_screen)
+        playlist_config, screen_config = cls._load_config(playlist_screen)
+        context = cls._load_context(display)
 
         return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context)
