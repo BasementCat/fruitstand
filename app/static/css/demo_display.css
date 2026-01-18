@@ -1,0 +1,49 @@
+/*#demo_config .form-control {
+    width: auto;
+    display: unset;
+}
+#demo_config #dd_iframe_url {
+    width: 100%;
+    display: block;
+}*/
+#demo_config .input-group {
+    margin: 0.25em auto;
+}
+#demo_config .input-group .input-wrapper {
+    border: 1px solid #ccc;
+    padding: 4px;
+    border-radius: 5px;
+    border-left-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+#demo_config .iframe-container {
+    text-align: center;
+}
+#dd_iframe {
+    border: 1px dotted #000;
+}
+#demo_config label {
+    display: block;
+    clear: both;
+}
+#demo_config h3 {
+    margin-top: 1.5em;
+    font-size: 1.5rem;
+}
+#demo_config h4 {
+    font-size: 1.1rem;
+    margin-top: 1em;
+}
+#demo_config .form-control.dims {
+    display: inline-block;
+    width: 5em;
+}
+#demo_config .metric-container {
+    margin-bottom: 1.5em;
+    /*border: 1px solid #ccc;*/
+    border-radius: 5px;
+}
+#demo_config .metric-container h4 label {
+    font-size: 1.5em;
+}
