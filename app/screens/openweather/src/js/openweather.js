@@ -32,8 +32,19 @@ import Chart from 'chart.js/auto'
   Chart.defaults.font.family = 'Tahoma, sans-serif';
   Chart.defaults.color = '#000';
 
+  const canvas = document.getElementById('graph-data');
+  const canvas_parent = canvas.parentNode;
+  // This does not handle resizing but should be fine
+  const parent_styles = getComputedStyle(canvas_parent);
+  const hz_padding = parseInt(parent_styles.paddingLeft) + parseInt(parent_styles.paddingRight);
+  const vt_padding = parseInt(parent_styles.paddingTop) + parseInt(parent_styles.paddingBottom);
+  const parent_width = canvas_parent.clientWidth - hz_padding;
+  const parent_height = canvas_parent.clientHeight - vt_padding;
+  canvas.width = parent_width;
+  canvas.height = parent_height;
+
   new Chart(
-    document.getElementById('graph-data'),
+    canvas,
     {
       type: 'bar',
       options: {

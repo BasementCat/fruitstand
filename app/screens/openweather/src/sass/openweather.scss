@@ -7,113 +7,240 @@
     box-sizing: border-box;
     padding: 0.5em;
 
-    // dfl: temp\ninternals
-    // s: temp, forecast, \n internals, internals;
-    // m ???
-
+    // Tiny screens
+    .row-2, .loc-forecast {
+        display: none;
+    }
     .current {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        text-align: center;
-        align-items: center;
-
+        img {
+            display: none;
+        }
         .details {
             .temp {
+                display: block;
+                text-align: center;
+                align-items: flex-end;
                 .temp-number {
-                    font-size: 6em;
-                    // font-weight: bold;
+                    font-size: 4em;
+                    line-height: 0.85em;
+                }
+            }
+            .feelslike {
+                text-align: center;
+                .temp-prefix {
+                    font-size: 0.8em;
                 }
             }
         }
     }
 
-    .loc-forecast {
-        .location, .date {
-            float: right;
-            clear: both;
-        }
-        .location {
-            font-size: 1.55em;
-        }
-        .date {
-            font-size: 1.2em;
-        }
-        .forecast {
+    @include bp(t) {
+        .row-1 {
             width: 100%;
-            clear: both;
+            height: 100%;
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
             text-align: center;
-
-            .day {
-                font-size: 1.1em;
+            align-items: center;
+            .current {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                img {
+                    display: block;
+                }
+                .temp {
+                    .temp-number {
+                        line-height: unset;
+                    }
+                }
             }
-            .icon {
-                margin: 0.5em 0;
-                height: 3em;
-                width: auto;
-                aspect-ratio: 1;
-                object-fit: contain;
-            }
-            .details {
-                font-size: 0.85em;
-            }
-        }
-    }
-
-    .stats {
-        display: grid;
-        width: 100%;
-        height: 100%;
-        grid-template-columns: repeat(2, 1fr);
-
-        .stats-item {
-            display: grid;
-            grid-template-columns: 1fr 3fr;
-
-            .icon {
+            .loc-forecast {
                 width: 100%;
-                height: auto;
-                aspect-ratio: 1;
-                object-fit: contain;
-            }
-            .title {
-                display: block;
-                font-size: 0.8em;
-                // line-height: 0.85em;
-            }
-            .details {
-                font-size: 1.2em;
-                // line-height: 1.2em;
-
-                .icon {
-                    width: 1em;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                .location {
+                    display: none;
                 }
-
-                .suffix {
+                .date {
                     font-size: 0.8em;
-                    // line-height: 0.8em;
+                }
+                .forecast {
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                    .forecast-item {
+                        flex: 1 1 0px;
+                        .details {
+                            display: none;
+                        }
+                    }
                 }
             }
         }
     }
 
-    .graph, .graph #graph-data {
-        width: 100%;
-        height: 100%;
+    @include bp(xs) {
+        .row-1 .loc-forecast .forecast-item img {
+            max-height: 3em;
+        }
     }
 
-    @include bp('l') {
-        display: grid;
-        grid-template-rows: 2fr 3fr;
-
+    @include bp(s) {
+        display: flex;
+        flex-direction: column;
+        max-height: 100%;
         .row-1 {
             display: grid;
-            grid-template-columns: 2fr 3fr;
+            grid-template-columns: 1fr 4fr;
+            gap: 1em;
+            height: unset;
+            text-align: left;
+            align-items: flex-start;
+            .current {
+                display: flex;
+                flex-direction: column;
+                img {
+                    max-height: 4em;
+                }
+                .temp {
+                    .temp-number {
+                        font-size: 3em;
+                    }
+                }
+                .feelslike {
+                    display: none;
+                }
+            }
+            .loc-forecast {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-areas: "loc date"
+                                     "fc fc";
+                .location {
+                    display: block;
+                    grid-area: loc;
+                    font-size: 0.9em;
+                }
+                .date {
+                    grid-area: date;
+                    font-size: 0.9em;
+                }
+                .forecast {
+                    grid-area: fc;
+                    text-align: center;
+                    .forecast-item {
+                        .details {
+                            display: block;
+                            font-size: 0.8em;
+                        }
+                    }
+                }
+            }
         }
         .row-2 {
+            display: block;
+            flex: 1;
+            .stats {
+                display: none;
+            }
+            .graph {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+
+    @include bp(m) {
+        .row-2 {
             display: grid;
+            grid-template-columns: 1fr 3fr;
+            .stats {
+                display: block;
+                .stats-item {
+                    .icon {
+                        display: inline-block;
+                        vertical-align: middle;
+                        max-height: 1.5em;
+                    }
+                    .stats-data {
+                        display: inline-block;
+                    }
+                    .title {
+                        display: none;
+                    }
+                    .details {
+                        white-space: nowrap;
+                        .icon {
+                            display: inline;
+                            max-height: 0.8em;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @include bp(l) {
+        row-gap: 1em;
+        .row-1 {
             grid-template-columns: 1fr 2fr;
+            align-items: center;
+            .current {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                align-items: center;
+                img {
+                    max-height: unset;
+                }
+                .temp {
+                    white-space: nowrap;
+                    .temp-number {
+                        font-size: 6em;
+                        line-height: 0.8em;
+                    }
+                }
+                .feelslike {
+                    display: block;
+                }
+            }
+            .loc-forecast {
+                align-items: first baseline;
+                column-gap: 1em;
+                row-gap: 0.5em;
+                .location {
+                    font-size: 1.5em;
+                    justify-self: right;
+                }
+                .date {
+                    font-size: 1.2em;
+                }
+            }
+        }
+        .row-2 {
+            grid-template-columns: 2fr 3fr;
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                .stats-item {
+                    display: grid;
+                    grid-template-columns: 1fr 4fr;
+                    .title {
+                        display: block;
+                        font-size: 0.9em;
+                    }
+                    .details {
+                        font-size: 1.1em;
+                        .suffix {
+                            font-size: 0.8em;
+                        }
+                    }
+                    >.icon {
+                        max-height: 1.7em;
+                    }
+                }
+            }
         }
     }
 }

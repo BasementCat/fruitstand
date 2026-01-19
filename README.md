@@ -64,11 +64,11 @@ In order to run locally you'll need to set up a minimal configuration as explain
 To build assets for the main application, as well as any discovered screens:
 
     # prod
-    flask run compile sass
+    flask compile sass
     # dev/testing
-    flask run compile sass --env dev --watch
+    flask compile sass --env dev --watch
 
-To build within Docker if you do not set up a local development environment, prefix the commands with `docker compose exec app --`, for example `docker compose exec app -- flask run compile sass`
+To build within Docker if you do not set up a local development environment, prefix the commands with `docker compose exec app --`, for example `docker compose exec app -- flask compile sass`
 
 ## Docker image
 

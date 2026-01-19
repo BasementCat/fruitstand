@@ -1,7 +1,8 @@
 @use "breakpoints" as *;
+@use "vars" as *;
 
 #statusbar {
-    height: 20px;
+    height: $statusbar_height;
     font-size: 15px;
     display: flex;
     flex-direction: row;
