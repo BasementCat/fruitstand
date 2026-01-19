@@ -22,7 +22,8 @@
                         <span class="temp-suffix">&deg;{{ screen.config.units |weather_suffix('temp') }}</span>
                     </div>
                     <div class="feelslike">
-                        Feels Like {{ forecast.current.feels_like |fixed(d=0) }}&deg;
+                        <span class="temp-prefix">Feels Like</span>
+                        <span class="temp-number">{{ forecast.current.feels_like |fixed(d=0) }}</span><span class="temp-suffix">&deg;</span>
                     </div>
                 </div>
             </div>
@@ -90,12 +91,19 @@
                         <span class="details">
                             {{ forecast.current.uvi |fixed(d=1) }}
                             <span class="suffix">
-                                {% if forecast.current.uvi >= 11 %}Extreme
-                                {% elif forecast.current.uvi >= 8 %}Very High
-                                {% elif forecast.current.uvi >= 6 %}High
-                                {% elif forecast.current.uvi >= 3 %}Moderate
-                                {% else %}Low
-                                {% endif %}
+                                (
+                                    {%- if forecast.current.uvi >= 11 -%}
+                                        Extreme
+                                    {%- elif forecast.current.uvi >= 8 -%}
+                                        Very High
+                                    {%- elif forecast.current.uvi >= 6 -%}
+                                        High
+                                    {%- elif forecast.current.uvi >= 3 -%}
+                                        Moderate
+                                    {%- else -%}
+                                        Low
+                                    {%- endif -%}
+                                )
                             </span>
                         </span>
                     </div>
@@ -114,13 +122,21 @@
                         <span class="details">
                             {{ air_pollution.list.0.main.aqi |fixed(d=0) }}
                             <span class="suffix">
-                                {% if air_pollution.list.0.main.aqi > 300 %}Hazardous
-                                {% elif air_pollution.list.0.main.aqi > 200 %}Very Unhealthy
-                                {% elif air_pollution.list.0.main.aqi > 150 %}Unhealthy
-                                {% elif air_pollution.list.0.main.aqi > 100 %}Sensitive Unhealthy
-                                {% elif air_pollution.list.0.main.aqi > 50 %}Moderate
-                                {% else %}Good
-                                {% endif %}
+                                (
+                                    {%- if air_pollution.list.0.main.aqi > 300 -%}
+                                        Hazardous
+                                    {%- elif air_pollution.list.0.main.aqi > 200 -%}
+                                        Very Unhealthy
+                                    {%- elif air_pollution.list.0.main.aqi > 150 -%}
+                                        Unhealthy
+                                    {%- elif air_pollution.list.0.main.aqi > 100 -%}
+                                        Sensitive Unhealthy
+                                    {%- elif air_pollution.list.0.main.aqi > 50 -%}
+                                        Moderate
+                                    {%- else -%}
+                                        Good
+                                    {%- endif -%}
+                                )
                             </span>
                         </span>
                     </div>

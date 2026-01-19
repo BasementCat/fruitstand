@@ -1,6 +1,7 @@
 @use "breakpoints" as *;
 @use "displayhelpers";
 @use "statusbar";
+@use "vars" as *;
 
 html, body {
     border: 0;
@@ -35,5 +36,6 @@ body {
 
     #main {
         flex-grow: 1;
+        max-height: calc(100% - $statusbar_height);
     }
 }
