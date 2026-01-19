@@ -39,6 +39,10 @@ Configuration may also be passed by setting environment variables.  All supporte
   * When enabled, any new screens require approval before they will display any content.
 * **FRUITSTAND_ENABLE_DISPLAY_AUTH** - Enable display authentication
   * When enabled, screens must provide a valid secret key (via the `sk` parameter) before they will display any content.
+* **FRUITSTAND_NO_AUTO_MIGRATE** - Do not automatically run migrations
+  * This is not used directly by the Flask app, but rather by the entrypoint script
+  * By default, the entrypoint script will attempt to run migrations prior to starting the app
+  * In a case where you have many containers you probably don't want all of them doing this, or if you prefer to run them manually
 
 ## Running
 

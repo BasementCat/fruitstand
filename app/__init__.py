@@ -76,10 +76,12 @@ def create_app():
     from app.commands import (
         compile_assets as compile_assets_commands,
         user as user_commands,
+        util as util_commands,
     )
 
     app.cli.add_command(compile_assets_commands.cli)
     app.cli.add_command(user_commands.cli)
+    app.cli.add_command(util_commands.cli)
 
     # Do this last; lets screens add jinja stuff
     apply_jinja_env(app)

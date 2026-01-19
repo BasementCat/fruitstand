@@ -22,7 +22,8 @@ RUN apk add --no-cache \
         freetype \
         harfbuzz \
         ca-certificates \
-        ttf-freefont
+        ttf-freefont \
+        dumb-init
 
 # Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
@@ -43,10 +44,12 @@ COPY Pipfile* ./
 RUN pipenv install --system --deploy
 
 COPY . .
+# RUN chown -R uwsgi:uwsgi /app
+# RUN chmod -R 555 /app
 
 # TODO: more fleshed out uwsgi configuration
 
-ENTRYPOINT [ "uwsgi", \
+ENTRYPOINT [ "/app/entrypoint.sh", \
                "--env", "HOME=/home/uwsgi", \
                "--uid", "uwsgi", \
                "--plugins", "python3", \
