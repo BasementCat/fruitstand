@@ -153,7 +153,7 @@ class Battery(Metric):
         out = [
             data['type'],
             data['voltage'],
-            'c' if data['charging'] else None
+            'c' if data.get('charging') else None
         ]
         return ';'.join(map(str, filter(None, out)))
 

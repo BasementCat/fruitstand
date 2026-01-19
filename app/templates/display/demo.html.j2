@@ -4,145 +4,168 @@
 
 {% block styles %}
     {{ super() }}
-    <style>
-        #dd_iframe {
-            border: 1px dotted #000;
-        }
-        #demo_config label {
-            display: block;
-            clear: both;
-        }
-        #demo_config h3 {
-            margin-top: 1.5em;
-            font-size: 1.5rem;
-        }
-        #demo_config h4 {
-            font-size: 1.1rem;
-            margin-top: 1em;
-        }
-        #demo_config .form-control.dims {
-            display: inline-block;
-            width: 5em;
-        }
-        #demo_config .metric-container {
-            margin-bottom: 1.5em;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        #demo_config .metric-container h4 label {
-            font-size: 1.5em;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/demo_display.css') }}">
 {% endblock %}
 
-{% block main %}
-    <div id="demo_config" class="container">
-        <div class="row">
+{% block scripts %}
+    {{ super() }}
+    <script>
+        var dd_config = {
+            'metrics': [
+                {% for metric_key, (metric_name, metric_param, inputs) in metric_inputs.items() %}
+                    {% for input_name, input_config in inputs.items() %}
+                        {
+                            'key': '{{ metric_key }}',
+                            'param': '{{ metric_param }}',
+                            // 'input_name': '{{ metric_key }}_{{ input_name }}',
+                            'input_name': '{{ input_name }}',
+                            // 'form_name': '{{ metric_key }};{{ input_name }}',
+                            'type': '{{ input_config.type }}',
+                            'default': {{ input_config.default |tojson }},
+                        },
+                    {% endfor %}
+                {% endfor %}
+            ],
+            'urls': {
+                'base': '{{ url_for('display.render', _external=True) }}?',
+                'params': '{{ url_for('display.demo_params', _external=True) }}',
+            }
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/demo_display.js') }}"></script>
+{% endblock %}
+
+{% macro input_group(key, label, size='sm', class_=None, wrapper=False) %}
+    {% set id = 'dd_' ~ key %}
+    {% set label_id = id ~ '_label' %}
+    {% set props = 'class="' ~ (class_ or 'form-control') ~ '" id="' ~ id ~ '" aria-describedby="' ~ label_id ~ '"' %}
+    <div class="input-group input-group-{{ size }}">
+        <span class="input-group-addon" id="{{ label_id }}">
+            <strong>{{ label }}</strong>
+        </span>
+        {% if wrapper %}<div class="input-wrapper">{% endif %}
+        {{ caller(props) }}
+        {% if wrapper %}</div>{% endif %}
+    </div>
+{% endmacro %}
+
+{% block main_container %}
+    <div id="demo_config" class="container-fluid">
+        <div class="row-fluid">
             <div class="col-xs-12">
-                <input type="text" id="dd_iframe_url" class="form-control disabled" disabled />
-                <iframe id="dd_iframe"></iframe>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12">
-                <h2>Demo Display Config</h2>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <h3>Basics</h3>
-                <label class="form-label">
-                    Key
-                    <input type="text" id="dd_key" class="form-control" />
-                </label>
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <h3>Playlist/Screen</h3>
-                <label class="form-label">
-                    Playlist/Screen
-                    <select id="dd_playlist_screen" class="form-select">
-                        <option value="pl-0;s-0">[Playlist assigned to display]</option>
-                        {% for pl in playlists %}
-                            <optgroup label="{{ pl.name }}">
-                                <option value="pl-{{ pl.id }};s-0">[Screens assigned to playlist]</option>
-                                {% for pls in pl.playlist_screens %}
-                                    <option value="pl-{{ pl.id }};s-{{ pls.id }}">{{ pls.screen.title }}</option>
+                <div class="input-group">
+                    <input type="text" id="dd_iframe_url" class="form-control disabled" disabled />
+                    <span class="input-group-btn">
+                        <button id="dd_iframe_url_copy" class="btn btn-primary" type="button">Copy</button>
+                        <a id="dd_iframe_url_open" class="btn btn-success" href="#" target="_blank">Open</a>
+                    </span>
+                </div>
+                <div class="row-fluid">
+                    <div class="col-xs-12 col-sm-6">
+                        {% call(props) input_group('key', 'Key') %}
+                            <input type="text" {{ props }} placeholder="Key">
+                        {% endcall %}
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        {% call(props) input_group('playlist_screen', 'Playlist/Screen') %}
+                            <select {{ props }}>
+                                <option value="pl-0;s-0">[Playlist assigned to display]</option>
+                                {% for pl in playlists %}
+                                    <optgroup label="{{ pl.name }}">
+                                        <option value="pl-{{ pl.id }};s-0">[Screens assigned to playlist]</option>
+                                        {% for pls in pl.playlist_screens %}
+                                            <option value="pl-{{ pl.id }};s-{{ pls.id }}">{{ pls.screen.title }}</option>
+                                        {% endfor %}
+                                    </optgroup>
                                 {% endfor %}
-                            </optgroup>
-                        {% endfor %}
-                    </select>
-                </label>
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <h3>Secret Key</h3>
-                {% if not config['ENABLE_DISPLAY_AUTH'] %}
-                    <p class="help-block">
-                        Display auth is not enabled; the selected key will have no effect.
-                    </p>
-                {% endif %}
-                <label class="form-label">
-                    Select Existing
-                    <select id="dd_sk_sel" class="form-select">
-                        <option value="">None/Manual</option>
-                        {% for s in secrets %}
-                            <option value="{{ s.key }}">{{ s.name }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label class="form-label">
-                    Manual
-                    <br>
-                    <input type="text" id="dd_sk" class="form-control" />
-                </label>
+                            </select>
+                        {% endcall %}
+                    </div>
+                    <div class="col-xs-12">
+                        <div class="well iframe-container">
+                            <iframe id="dd_iframe"></iframe>
+                            <hr>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" id="dd_update">Update</button>
+                                <button type="button" class="btn btn-secondary" id="dd_reset">Reset</button>
+                            </div>
+                            <label>
+                                <input type="checkbox" id="dd_autoupdate">
+                                Auto-Update
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        {% call(props) input_group('size', 'Size') %}
+                            <select {{ props }}>
+                                <option value="">Custom</option>
+                                <option value="128x128">128x128</option>
+                                <option value="160x128">160x128</option>
+                                <option value="240x240">240x240</option>
+                                <option value="320x240">320x240</option>
+                                <option value="480x320">480x320</option>
+                                <option value="480x480">480x480</option>
+                                <option value="600x448">600x448 (WaveShare 5.65in)</option>
+                                <option value="800x480">800x480 (SeeedStudio reTerminal E100x)</option>
+                                <option value="800x600">800x600</option>
+                            </select>
+                        {% endcall %}
+                    </div>
+                    <div class="col-xs-3">
+                        {% call(props) input_group('width', 'W') %}
+                            <input type="text" {{ props }} placeholder="Width">
+                        {% endcall %}
+                    </div>
+                    <div class="col-xs-3">
+                        {% call(props) input_group('height', 'H') %}
+                            <input type="text" {{ props }} placeholder="Height">
+                        {% endcall %}
+                    </div>
+                    <div class="col-xs-12 col-sm-6 col-lg-3">
+                        {% call(props) input_group('color_spec', 'Color Spec') %}
+                            <select {{ props }}>
+                                {% for cs in COLOR_SPEC.values() %}
+                                    <option value="{{ cs.key }}">{{ cs.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endcall %}
+                    </div>
+                    <div class="col-xs-12 col-sm-6 col-lg-3">
+                        {% call(props) input_group('display_spec', 'Display Spec') %}
+                            <select {{ props }}>
+                                {% for ds in DISPLAY_SPEC.values() %}
+                                    <option value="{{ ds.key }}">{{ ds.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endcall %}
+                    </div>
+                    {% if config['ENABLE_DISPLAY_AUTH'] %}
+                        <div class="col-xs-12 col-sm-6 col-lg-3">
+                            {% call(props) input_group('sk_sel', 'Secret Key') %}
+                                <select {{ props }}>
+                                    <option value="">None/Custom</option>
+                                    {% for s in secrets %}
+                                        <option value="{{ s.key }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% endcall %}
+                        </div>
+                        <div class="col-xs-12 col-sm-6 col-lg-3">
+                            {% call(props) input_group('sk', 'Custom Secret Key') %}
+                                <input type="text" {{ props }} placeholder="Secret Key">
+                            {% endcall %}
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-12 col-md-6">
-                <h3>Display</h3>
-                <label class="form-label">
-                    Size - Common
-                    <select id="dd_size" class="form-select">
-                        <option value="">Other</option>
-                        <option value="128x128">128x128</option>
-                        <option value="160x128">160x128</option>
-                        <option value="240x240">240x240</option>
-                        <option value="320x240">320x240</option>
-                        <option value="480x320">480x320</option>
-                        <option value="480x480">480x480</option>
-                        <option value="800x480">800x480</option>
-                        <option value="800x600">800x600</option>
-                    </select>
-                </label>
-                <label class="form-label">
-                    Size
-                    <br>
-                    <input type="text" id="dd_width" class="form-control dims" />
-                    x
-                    <input type="text" id="dd_height" class="form-control dims" />
-                </label>
-                <label class="form-label">
-                    Color Spec
-                    <select id="dd_color_spec" class="form-select">
-                        {% for cs in COLOR_SPEC.values() %}
-                            <option value="{{ cs.key }}">{{ cs.name }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label class="form-label">
-                    Display Spec
-                    <select id="dd_display_spec" class="form-select">
-                        {% for ds in DISPLAY_SPEC.values() %}
-                            <option value="{{ ds.key }}">{{ ds.name }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-            </div>
-            <div class="col-sm-12 col-md-6">
-                <h3>Metrics</h3>
+            <div class="col-xs-12">
+                <h2>Metrics</h2>
 
                 <div class="row">
                     {% for metric_key, (metric_name, metric_param, inputs) in metric_inputs.items() %}
-                        <div class="col-md-12 col-lg-6 metric-container" id="dd_metric_{{ metric_key }}_container">
+                        <div class="col-xs-12 col-sm-6 col-lg-4 col-xl-3 metric-container" id="dd_metric_{{ metric_key }}_container">
                             <h4>
                                 <label>
                                     <input type="checkbox" class="form-check-input" value="1" id="dd_metric_{{ metric_key }}_enabled" />
@@ -150,51 +173,49 @@
                                 </label>
                             </h4>
                             {% for input_name, input_config in inputs.items() %}
-                                {% if input_config.type == 'checkbox' %}
-                                    <label>
-                                        <input type="checkbox" class="form-check-input" value="1" name="{{ metric_key }};{{ input_name }}"
-                                            id="dd_metric_{{ metric_key }}_{{ input_name }}" />
-                                        {{ input_config.label }}
-                                    </label>
-                                {% elif input_config.type == 'select' %}
-                                    <label class="form-label">
-                                        {{ input_config.label }}
-                                        <select class="form-control" name="{{ metric_key }};{{ input_name }}" id="dd_metric_{{ metric_key }}_{{ input_name }}">
+                                {% call(props) input_group(
+                                    'metric_' ~ metric_key ~ '_' ~ input_name,
+                                    input_config.label ~ (
+                                        (' [Value: <span id="dd_metric_' ~ metric_key ~ '_' ~ input_name ~ '_value"></span>]')
+                                        if input_config.type == 'range'
+                                        else ''
+                                    ),
+                                    class_=(
+                                        'form-check-input' if input_config.type == 'checkbox' else
+                                        ('form-range' if input_config.type == 'range' else None)
+                                    ),
+                                    wrapper=True if input_config.type in ('range', 'checkbox') else False,
+                                ) %}
+                                    {% if input_config.type == 'checkbox' %}
+                                        <label>
+                                            <input type="checkbox" {{ props }} value="1" name="{{ metric_key }};{{ input_name }}" />
+                                            {{ input_config.label }}
+                                        </label>
+                                    {% elif input_config.type == 'select' %}
+                                        <select name="{{ metric_key }};{{ input_name }}" {{ props }}>
                                             {% for k, v in input_config.choices.items() %}
                                                 <option value="{{ k }}">{{ v }}</option>
                                             {% endfor %}
                                         </select>
-                                    </label>
-                                {% else %}
-                                    <label class="form-label">
-                                        {{ input_config.label }}
-                                        {% if input_config.type == 'range' %}
-                                            (Value: <span id="dd_metric_{{ metric_key }}_{{ input_name }}_value"></span>)
-                                        {% endif %}
-                                        <input
-                                            {% if input_config.type == 'range' %}
-                                                type="range"
-                                                class="form-range"
-                                            {% else %}
-                                                type="{{ input_config.type }}"
-                                                class="form-control"
-                                            {% endif %}
-                                            {% if input_config.min is defined %}min="{{ input_config.min }}"{% endif %}
-                                            {% if input_config.max is defined %}max="{{ input_config.max }}"{% endif %}
-                                            {% if input_config.step is defined %}step="{{ input_config.step }}"{% endif %}
-                                            name="{{ metric_key }};{{ input_name }}"
-                                            id="dd_metric_{{ metric_key }}_{{ input_name }}"
-                                        />
-                                    </label>
-                                {% endif %}
+                                    {% else %}
+                                            <input
+                                                {% if input_config.type == 'range' %}
+                                                    type="range"
+                                                {% else %}
+                                                    type="{{ input_config.type }}"
+                                                {% endif %}
+                                                {% if input_config.min is defined %}min="{{ input_config.min }}"{% endif %}
+                                                {% if input_config.max is defined %}max="{{ input_config.max }}"{% endif %}
+                                                {% if input_config.step is defined %}step="{{ input_config.step }}"{% endif %}
+                                                name="{{ metric_key }};{{ input_name }}"
+                                                {{ props }}
+                                            />
+                                    {% endif %}
+                                {% endcall %}
                             {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
-            </div>
-            <div class="col-xs-12">
-                <button type="button" class="btn btn-primary" id="dd_update">Update</button>
-                <button type="button" class="btn btn-secondary" id="dd_reset">Reset</button>
             </div>
         </div>
         <div class="row">
@@ -241,214 +262,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block scripts %}
-    {{ super() }}
-    <script>
-        (function() {
-            let metric_config = [
-                {% for metric_key, (metric_name, metric_param, inputs) in metric_inputs.items() %}
-                    {% for input_name, input_config in inputs.items() %}
-                        {
-                            'key': '{{ metric_key }}',
-                            'param': '{{ metric_param }}',
-                            'input_name': '{{ metric_key }}_{{ input_name }}',
-                            'form_name': '{{ metric_key }};{{ input_name }}',
-                            'type': '{{ input_config.type }}',
-                            'default': {{ input_config.default |tojson }},
-                        },
-                    {% endfor %}
-                {% endfor %}
-            ];
-            let data = {
-                'key': 'demo-display',
-                'playlist': 0,
-                'playlist_screen': 0,
-                'width': 800,
-                'height': 480,
-                'color_spec': '1b',
-                'display_spec': 'static',
-                'metrics': {},
-            };
-
-            metric_config.forEach(c => data.metrics[c.input_name] = {'enabled': true, 'value': c.default || 0});
-            let default_data = {};
-            Object.assign(default_data, data);
-
-            const base_url = '{{ url_for('display.render', _external=True) }}?';
-            const params_url = '{{ url_for('display.demo_params', _external=True) }}';
-
-            const i_dd_key = document.getElementById('dd_key');
-            const i_dd_playlist_screen = document.getElementById('dd_playlist_screen');
-            const i_dd_sk_sel = document.getElementById('dd_sk_sel');
-            const i_dd_sk = document.getElementById('dd_sk');
-            const i_dd_size = document.getElementById('dd_size');
-            const i_dd_width = document.getElementById('dd_width');
-            const i_dd_height = document.getElementById('dd_height');
-            const i_dd_color_spec = document.getElementById('dd_color_spec');
-            const i_dd_display_spec = document.getElementById('dd_display_spec');
-
-            const i_dd_update = document.getElementById('dd_update');
-            const i_dd_reset = document.getElementById('dd_reset');
-
-            const d_dd_iframe_url = document.getElementById('dd_iframe_url');
-            const d_dd_iframe = document.getElementById('dd_iframe');
-
-            let metric_els = {};
-            metric_config.forEach(c => {
-                metric_els[c.input_name] = {
-                    'enabled': document.getElementById('dd_metric_' + c.key + '_enabled'),
-                    'value': document.getElementById('dd_metric_' + c.input_name),
-                    'display': document.getElementById('dd_metric_' + c.input_name + '_value'),
-                };
-            });
-
-            const build_url = async function() {
-                let formdata = new FormData();
-                metric_config.forEach(c => {
-                    if (c.type == 'checkbox') {
-                        formdata.append(c.form_name, metric_els[c.input_name].value.checked ? metric_els[c.input_name].value.value : '');
-                    } else {
-                        formdata.append(c.form_name, metric_els[c.input_name].value.value);
-                    }
-                });
-                let resp = await fetch(params_url, {
-                    'method': 'POST',
-                    'body': formdata,
-                })
-                let qs = await resp.text();
-
-                let parts = [
-                    ['k', data['key']],
-                    ['sk', data['sk']],
-                    ['w', data['width']],
-                    ['h', data['height']],
-                    ['cs', data['color_spec']],
-                    ['ds', data['display_spec']],
-                ];
-
-                if (data['playlist']) parts.push(['debug_playlist_id', data['playlist']]);
-                if (data['playlist_screen']) parts.push(['debug_playlist_screen_id', data['playlist_screen']]);
-                metric_config.forEach(c => {
-                    if (data.metrics[c.input_name].enabled) {
-                        parts.push([c.param, data.metrics[c.input_name].value]);
-                    }
-                });
-
-                return base_url + qs + '&' + parts.map(p => p.join('=')).join('&');
-            };
-
-            const update_data_from_form = function() {
-                data['key'] = i_dd_key.value;
-                const pls_data = i_dd_playlist_screen.value.split(';').map(v => v.split('-')[1]).map(v => parseInt(v));
-                data['playlist'] = pls_data[0] || null;
-                data['playlist_screen'] = pls_data[1] || null;
-                if (i_dd_sk_sel.value) {
-                    data['sk'] = i_dd_sk_sel.value;
-                } else {
-                    data['sk'] = i_dd_sk.value || null;
-                }
-                if (i_dd_size.value) {
-                    const s_data = i_dd_size.value.split('x').map(v => parseInt(v));
-                    data['width'] = s_data[0];
-                    data['height'] = s_data[1];
-                } else {
-                    data['width'] = parseInt(i_dd_width.value);
-                    data['height'] = parseInt(i_dd_height.value);
-                }
-                data['color_spec'] = i_dd_color_spec.value;
-                data['display_spec'] = i_dd_display_spec.value;
-                metric_config.forEach(c => {
-                    let v;
-                    if (c.type == 'checkbox') {
-                        v = metric_els[c.input_name].value.checked;
-                    } else {
-                        v = metric_els[c.input_name].value.value;
-                    }
-                    data.metrics[c.input_name] = {
-                        'enabled': metric_els[c.input_name].enabled.checked,
-                        'value': v,
-                    };
-                });
-                save_data_to_storage();
-            };
-
-            const update_form_from_data = function() {
-                i_dd_key.value = data['key'];
-                i_dd_playlist_screen.value = 'pl-' + (data['playlist'] || 0) + ';s-' + (data['playlist_screen'] || 0);
-                if (data['sk']) {
-                    if (i_dd_sk_sel.querySelector('[value="' + data['sk'] + '"]')) {
-                        i_dd_sk_sel.value = data['sk'];
-                        i_dd_sk.value = '';
-                    } else {
-                        i_dd_sk_sel.value = '';
-                        i_dd_sk.value = data['sk'];
-                    }
-                } else {
-                    i_dd_sk_sel.value = i_dd_sk.value = '';
-                }
-                i_dd_width.value = data['width'];
-                i_dd_height.value = data['height'];
-                i_dd_color_spec.value = data['color_spec'];
-                i_dd_display_spec.value = data['display_spec'];
-                metric_config.forEach(c => {
-                    metric_els[c.input_name].enabled.checked = data.metrics[c.input_name].enabled;
-                    if (c.type == 'checkbox') {
-                        metric_els[c.input_name].value.checked = data.metrics[c.input_name].value;
-                    } else {
-                        metric_els[c.input_name].value.value = data.metrics[c.input_name].value;
-                    }
-                    if (metric_els[c.input_name].display) {
-                        metric_els[c.input_name].display.innerHTML = data.metrics[c.input_name].value;
-                    }
-                });
-            };
-
-            const load_data_from_storage = function() {
-                let data_str = window.localStorage.getItem('td_demo_data');
-                if (data_str) {
-                    try {
-                        let data_obj = JSON.parse(data_str);
-                        if (data_obj) {
-                            Object.keys(data_obj).forEach(k => data[k] = data_obj[k]);
-                            update_form_from_data();
-                        }
-                    } catch (e) {}
-                }
-            };
-
-            const save_data_to_storage = function() {
-                window.localStorage.setItem('td_demo_data', JSON.stringify(data));
-            };
-
-            const on_input_changed = function() {
-                update_data_from_form();
-                update_form_from_data();
-            };
-
-            const update_screen = async function() {
-                const url = await build_url();
-                d_dd_iframe_url.value = url;
-                d_dd_iframe.width = data['width'];
-                d_dd_iframe.height = data['height'];
-                d_dd_iframe.src = url;
-            };
-
-            const reset_data = function() {
-                data = {};
-                Object.assign(data, default_data);
-                save_data_to_storage();
-                update_form_from_data();
-            };
-
-            load_data_from_storage();
-            update_form_from_data();
-
-            document.getElementById('demo_config').querySelectorAll('input, select').forEach(i => i.addEventListener('change', on_input_changed));
-            document.getElementById('demo_config').querySelectorAll('input[type=range]').forEach(i => i.addEventListener('input', on_input_changed));
-            i_dd_update.addEventListener('click', update_screen);
-            i_dd_reset.addEventListener('click', reset_data);
-        })();
-    </script>
 {% endblock %}
