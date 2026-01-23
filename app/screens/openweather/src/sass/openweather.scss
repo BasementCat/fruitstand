@@ -9,6 +9,10 @@
     box-sizing: border-box;
     padding: 0.5em;
 
+    .icon {
+        width: auto;
+    }
+
     // Tiny screens
     .row-2, .loc-forecast {
         display: none;
@@ -164,7 +168,7 @@
                     .icon {
                         display: inline-block;
                         vertical-align: middle;
-                        max-height: 1.5em;
+                        max-height: 1.65em;
                     }
                     .stats-data {
                         display: inline-block;
