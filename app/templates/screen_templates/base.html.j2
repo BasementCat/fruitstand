@@ -73,6 +73,8 @@
                 {% endif %}
             {% endblock %}
         </div>
-        {% block scripts %}{% endblock %}
+        {% block scripts %}
+            <script src="{{ url_for('static', filename='js/screen_helpers.js') }}"></script>
+        {% endblock %}
     </body>
 </html>
