@@ -20,6 +20,8 @@ svg {
         }
         #warning, #sun, #lightning, #star {
             fill: $c-3b-yellow;
+            stroke: black;
+            stroke-width: 2%;
         }
         #wind, #dust2, #smoke {
             fill: $c-3b-black;
@@ -71,6 +73,20 @@ svg {
         }
         #alien {
             fill: $c-3b-green;
+        }
+    }
+    .stats-item {
+        .wi-sunrise, .wi-sunset, .wi-day-sunny {
+            background: $c-3b-black;
+            border-radius: 50%;
+            #horizon {
+                fill: $c-3b-white;
+            }
+        }
+        svg {
+            #warning, #sun, #lightning, #star {
+                stroke-width: 0;
+            }
         }
     }
 }
