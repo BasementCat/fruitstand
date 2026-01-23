@@ -9,8 +9,8 @@
    viewBox="0 0 512 512"
    style="enable-background:new 0 0 512 512;"
    xml:space="preserve"
-   sodipodi:docname="house.svg"
-   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04, custom)"
+   sodipodi:docname="house_pressure.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,15 +24,17 @@
    inkscape:pageopacity="0.0"
    inkscape:pagecheckerboard="0"
    showgrid="false"
-   inkscape:zoom="0.58350119"
-   inkscape:cx="171.37926"
-   inkscape:cy="577.54809"
-   inkscape:window-width="1920"
-   inkscape:window-height="1025"
-   inkscape:window-x="0"
-   inkscape:window-y="24"
-   inkscape:window-maximized="1"
-   inkscape:current-layer="Layer_1" />
+   inkscape:zoom="1.4142136"
+   inkscape:cx="586.54507"
+   inkscape:cy="262.33661"
+   inkscape:window-width="2560"
+   inkscape:window-height="1387"
+   inkscape:window-x="1352"
+   inkscape:window-y="25"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="Layer_1"
+   inkscape:showpageshadow="2"
+   inkscape:deskcolor="#d1d1d1" />
 <style
    type="text/css"
    id="style2">
@@ -41,13 +43,11 @@
 <g
    id="g8"
    transform="matrix(0.78117371,0,0,0.78117371,56.01953,56.048697)">
+	
 	<path
+   id="line"
    class="st0"
-   d="M 51.2,440.2 V 218.3 h 34.1 v 221.8 c 0,9.4 7.6,17.1 17.1,17.1 h 307.2 c 9.4,0 17.1,-7.6 17.1,-17.1 V 218.3 h 34.1 v 221.8 c 0,28.3 -22.9,51.2 -51.2,51.2 H 102.4 C 74.1,491.4 51.2,468.4 51.2,440.2 Z M 426.7,64.7 V 184.2 L 358.4,115.9 V 64.7 c 0,-9.4 7.6,-17.1 17.1,-17.1 h 34.1 c 9.4,0.1 17.1,7.7 17.1,17.1 z"
-   id="path4" />
-	<path
-   class="st0"
-   d="m 231.9,30.6 c 13.3,-13.3 34.9,-13.3 48.3,0 L 507,257.4 c 6.7,6.7 6.7,17.5 0,24.2 -6.7,6.7 -17.5,6.7 -24.2,0 L 256,54.8 29.2,281.6 c -6.7,6.7 -17.5,6.7 -24.2,0 -6.7,-6.7 -6.7,-17.5 0,-24.2 z"
-   id="path6" />
+   d="m 231.9,30.6 c 13.3,-13.3 34.9,-13.3 48.3,0 L 507,257.4 c 6.7,6.7 6.7,17.5 0,24.2 -6.7,6.7 -17.5,6.7 -24.2,0 L 256,54.8 29.2,281.6 c -6.7,6.7 -17.5,6.7 -24.2,0 -6.7,-6.7 -6.7,-17.5 0,-24.2 z M 51.2,440.2 51.2,259.59809 85.3,225.50305 85.3,440.1 c 0,9.4 7.6,17.1 17.1,17.1 h 307.2 c 9.4,0 17.1,-7.6 17.1,-17.1 l 0,-214.59695 34.1,34.09504 0,180.50191 c 0,28.3 -22.9,51.2 -51.2,51.2 H 102.4 C 74.1,491.4 51.2,468.4 51.2,440.2 Z m 375.5,-375.5 0,112.40421 -68.3,-68.3 0,-44.10421 c 0,-9.4 7.6,-17.1 17.1,-17.1 h 34.1 c 9.4,0.1 17.1,7.7 17.1,17.1 z"
+   sodipodi:nodetypes="ccssscssccsccssssccsscssccsscs" />
 </g>
 </svg>
