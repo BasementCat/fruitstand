@@ -11,11 +11,18 @@
     <script src="{{ url_for('fruitstand_openweather.static', filename='js/openweather.js') }}"></script>
 {% endblock %}
 
+{% block js_colors %}
+    {{ super() }}
+    {{ js_color('openweather graph temperature') }}
+    {{ js_color('openweather graph humidity') }}
+    {{ js_color('openweather graph precipitation') }}
+{% endblock %}
+
 {% block content %}
     <div id="weather">
         <div class="row-1">
             <div class="current">
-                <img src="{{ get_conditions_image(forecast.current) }}" class="icon" />
+                {{ get_conditions_image(forecast.current) |wi(extra_class='icon') }}
                 <div class="details">
                     <div class="temp">
                         <span class="temp-number">{{ forecast.current.temp |fixed(d=0) }}</span>
@@ -36,7 +43,7 @@
                     {% for day in forecast.daily[:5] %}
                         <div class="forecast-item">
                             <div class="day">{{ day.dt |dt(format='ddd', timezone=forecast.timezone, no_markup=True) }}</div>
-                            <img src="{{ get_conditions_image(day) }}" class="icon" />
+                            {{ get_conditions_image(day) |wi(extra_class='icon') }}
                             <div class="details">
                                 <span class="temp">{{ day.temp.max |fixed(d=0) }}&deg;</span>
                                 |
@@ -50,21 +57,21 @@
         <div class="row-2">
             <div class="stats">
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-sunrise.svg') }}" class="icon" />
+                    {{ wi('wi-sunrise', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Sunrise</span>
                         <span class="details">{{ forecast.current.sunrise |dt(format='h:mma', timezone=forecast.timezone, no_markup=True) }}</span>
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-sunset.svg') }}" class="icon" />
+                    {{ wi('wi-sunset', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Sunset</span>
                         <span class="details">{{ forecast.current.sunset |dt(format='h:mma', timezone=forecast.timezone, no_markup=True) }}</span>
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-strong-wind.svg') }}" class="icon" />
+                    {{ wi('wi-strong-wind', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Wind</span>
                         <span class="details">
@@ -75,7 +82,7 @@
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-humidity.svg') }}" class="icon" />
+                    {{ wi('wi-humidity', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Humidity</span>
                         <span class="details">
@@ -85,7 +92,7 @@
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-day-sunny.svg') }}" class="icon" />
+                    {{ wi('wi-day-sunny', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">UV Index</span>
                         <span class="details">
@@ -109,14 +116,14 @@
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/wi-barometer.svg') }}" class="icon" />
+                    {{ wi('wi-barometer', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Pressure</span>
                         <span class="details">{{ forecast.current.pressure |weather_convert(screen.config.units, 'pressure') }}</span>
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/air_filter.svg') }}" class="icon" />
+                    {{ wi('air_filter', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Air Quality</span>
                         <span class="details">
@@ -142,7 +149,7 @@
                     </div>
                 </div>
                 <div class="stats-item">
-                    <img src="{{ url_for('fruitstand_openweather.static', filename='images/visibility_icon.svg') }}" class="icon" />
+                    {{ wi('visibility_icon', extra_class='icon') }}
                     <div class="stats-data">
                         <span class="title">Visibility</span>
                         <span class="details">
@@ -152,7 +159,7 @@
                 </div>
                 {% if context.metrics.internal_temp is defined %}
                     <div class="stats-item">
-                        <img src="{{ url_for('fruitstand_openweather.static', filename='images/house_thermometer.svg') }}" class="icon" />
+                        {{ wi('house_thermometer', extra_class='icon') }}
                         <div class="stats-data">
                             <span class="title">Temperature</span>
                             <span class="details">{{ context.metrics.internal_temp.temp |weather_convert(screen.config.units, 'temp', from_units=context.metrics.internal_temp.units) }}</span>
@@ -161,7 +168,7 @@
                 {% endif %}
                 {% if context.metrics.internal_humidity is defined %}
                     <div class="stats-item">
-                        <img src="{{ url_for('fruitstand_openweather.static', filename='images/house_humidity.svg') }}" class="icon" />
+                        {{ wi('house_humidity', extra_class='icon') }}
                         <div class="stats-data">
                             <span class="title">Humidity</span>
                             <span class="details">
@@ -173,7 +180,7 @@
                 {% endif %}
                 {% if context.metrics.internal_pressure is defined %}
                     <div class="stats-item">
-                        <img src="{{ url_for('fruitstand_openweather.static', filename='images/house_pressure.svg') }}" class="icon" />
+                        {{ wi('house_pressure', extra_class='icon') }}
                         <div class="stats-data">
                             <span class="title">Pressure</span>
                             <span class="details">{{ context.metrics.internal_pressure.pressure |weather_convert(screen.config.units, 'pressure', from_units=context.metrics.internal_pressure.units) }}</span>

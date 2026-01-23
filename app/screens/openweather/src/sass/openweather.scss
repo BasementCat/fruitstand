@@ -1,4 +1,6 @@
 @use "breakpoints" as *;
+@use "icons";
+@use "graph";
 
 #weather {
     display: block;
@@ -7,12 +9,16 @@
     box-sizing: border-box;
     padding: 0.5em;
 
+    .icon {
+        width: auto;
+    }
+
     // Tiny screens
     .row-2, .loc-forecast {
         display: none;
     }
     .current {
-        img {
+        .icon {
             display: none;
         }
         .details {
@@ -46,7 +52,7 @@
             .current {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                img {
+                .icon {
                     display: block;
                 }
                 .temp {
@@ -82,7 +88,7 @@
     }
 
     @include bp(xs) {
-        .row-1 .loc-forecast .forecast-item img {
+        .row-1 .loc-forecast .forecast-item .icon {
             max-height: 3em;
         }
     }
@@ -101,7 +107,7 @@
             .current {
                 display: flex;
                 flex-direction: column;
-                img {
+                .icon {
                     max-height: 4em;
                 }
                 .temp {
@@ -162,7 +168,7 @@
                     .icon {
                         display: inline-block;
                         vertical-align: middle;
-                        max-height: 1.5em;
+                        max-height: 1.65em;
                     }
                     .stats-data {
                         display: inline-block;
@@ -191,7 +197,7 @@
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 align-items: center;
-                img {
+                .icon {
                     max-height: unset;
                 }
                 .temp {

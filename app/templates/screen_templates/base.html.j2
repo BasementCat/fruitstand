@@ -15,57 +15,57 @@
         </div>
         <div id="statusbar">
             {% block statusbar %}
-                <div class="statusbar-item d-s-inline-block">
-                    <img src="{{ url_for('static', filename='images/wi-cloud-refresh.svg') }}">
+                <div class="statusbar-item d-s-inline-block refresh">
+                    <img class="inline-svg" src="{{ url_for('static', filename='images/wi-cloud-refresh.svg') }}">
                     {{ now() |dt(no_markup=True) }}
                 </div>
                 {% if context.metrics.wifi %}
-                    <div class="statusbar-item">
+                    <div class="statusbar-item wifi">
                         {% if context.metrics.wifi.b == 0 %}
-                            <img src="{{ url_for('static', filename='images/wifi/wifi_x.svg') }}" />
+                            <img class="inline-svg bad" src="{{ url_for('static', filename='images/wifi/wifi_x.svg') }}" />
                             <span class="d-m-inline">Bad</span>
                         {% elif context.metrics.wifi.b == 1 %}
-                            <img src="{{ url_for('static', filename='images/wifi/wifi_1_bar.svg') }}" />
+                            <img class="inline-svg bad" src="{{ url_for('static', filename='images/wifi/wifi_1_bar.svg') }}" />
                             <span class="d-m-inline">Poor</span>
                         {% elif context.metrics.wifi.b == 2 %}
-                            <img src="{{ url_for('static', filename='images/wifi/wifi_2_bar.svg') }}" />
+                            <img class="inline-svg ok" src="{{ url_for('static', filename='images/wifi/wifi_2_bar.svg') }}" />
                             <span class="d-m-inline">OK</span>
                         {% elif context.metrics.wifi.b == 3 %}
-                            <img src="{{ url_for('static', filename='images/wifi/wifi_3_bar.svg') }}" />
+                            <img class="inline-svg ok" src="{{ url_for('static', filename='images/wifi/wifi_3_bar.svg') }}" />
                             <span class="d-m-inline">Good</span>
                         {% elif context.metrics.wifi.b == 4 %}
-                            <img src="{{ url_for('static', filename='images/wifi/wifi.svg') }}" />
+                            <img class="inline-svg good" src="{{ url_for('static', filename='images/wifi/wifi.svg') }}" />
                             <span class="d-m-inline">Excellent</span>
                         {% else %}
-                            <img src="{{ url_for('static', filename='images/wifi/wifi_off.svg') }}" />
+                            <img class="inline-svg bad" src="{{ url_for('static', filename='images/wifi/wifi_off.svg') }}" />
                             <span class="d-m-inline">Off</span>
                         {% endif %}
                         <span class="d-l-inline">({{ context.metrics.wifi.dbm }} dBm)</span>
                     </div>
                 {% endif %}
                 {% if context.metrics.battery %}
-                    <div class="statusbar-item">
+                    <div class="statusbar-item battery">
                         {% if context.metrics.battery.charging %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_charging_full_90deg.svg') }}" />
+                            <img class="inline-svg good" src="{{ url_for('static', filename='images/battery/battery_charging_full_90deg.svg') }}" />
                             <span class="d-l-inline">[Charging]</span>
                         {% elif context.metrics.battery.percent >= 0.95 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_full_90deg.svg') }}" />
+                            <img class="inline-svg good" src="{{ url_for('static', filename='images/battery/battery_full_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.81 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_6_bar_90deg.svg') }}" />
+                            <img class="inline-svg good" src="{{ url_for('static', filename='images/battery/battery_6_bar_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.67 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_5_bar_90deg.svg') }}" />
+                            <img class="inline-svg good" src="{{ url_for('static', filename='images/battery/battery_5_bar_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.53 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_4_bar_90deg.svg') }}" />
+                            <img class="inline-svg ok" src="{{ url_for('static', filename='images/battery/battery_4_bar_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.39 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_3_bar_90deg.svg') }}" />
+                            <img class="inline-svg ok" src="{{ url_for('static', filename='images/battery/battery_3_bar_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.25 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_2_bar_90deg.svg') }}" />
+                            <img class="inline-svg ok" src="{{ url_for('static', filename='images/battery/battery_2_bar_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.11 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_1_bar_90deg.svg') }}" />
+                            <img class="inline-svg bad" src="{{ url_for('static', filename='images/battery/battery_1_bar_90deg.svg') }}" />
                         {% elif context.metrics.battery.percent >= 0.05 %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_0_bar_90deg.svg') }}" />
+                            <img class="inline-svg bad" src="{{ url_for('static', filename='images/battery/battery_0_bar_90deg.svg') }}" />
                         {% else %}
-                            <img src="{{ url_for('static', filename='images/battery/battery_alert_90deg.svg') }}" />
+                            <img class="inline-svg bad" src="{{ url_for('static', filename='images/battery/battery_alert_90deg.svg') }}" />
                         {% endif %}
                         <span class="d-m-inline">{{ context.metrics.battery.percent |percent }}</span>
                         <span class="d-l-inline">({{ context.metrics.battery.voltage |fixed(d=2) }}v)</span>
@@ -73,6 +73,11 @@
                 {% endif %}
             {% endblock %}
         </div>
-        {% block scripts %}{% endblock %}
+        <div id="js_colors">
+            {% block js_colors %}{% endblock %}
+        </div>
+        {% block scripts %}
+            <script src="{{ url_for('static', filename='js/screen_helpers.js') }}"></script>
+        {% endblock %}
     </body>
 </html>

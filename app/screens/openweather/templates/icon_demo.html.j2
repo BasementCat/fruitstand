@@ -1,0 +1,175 @@
+{% extends "base.html.j2" %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        #images {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .image {
+            flex-basis: 150px;
+            flex-shrink: 1;
+            flex-grow: 0;
+        }
+        .image svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        svg #biohazard {
+            fill: red;
+        }
+        svg #error {
+            fill: red;
+        }
+        svg #error-text {
+            fill: black;
+        }
+        svg #warning {
+            fill: #f6dd38;
+        }
+        svg #warning-text {
+            fill: black;
+        }
+        svg #radiation {
+            fill: red;
+        }
+        svg #eye {
+            fill: black;
+        }
+        svg #eye-pupil {
+            fill: black;
+        }
+
+        svg path {
+            fill: magenta;
+        }
+
+        svg #line {
+            fill: black;
+        }
+        svg #indicator {
+            fill: black;
+        }
+        svg #sun {
+            fill: #f6dd38;
+        }
+        svg #wind {
+            fill: gray;
+        }
+        svg #cloud {
+            fill: #ccc;
+        }
+        svg #cloud2 {
+            fill: #ddd;
+        }
+        svg #text {
+            fill: black;
+        }
+        svg #fog {
+            fill: #888;
+        }
+        svg #hail {
+            fill: #ccc;
+        }
+        svg #rain {
+            fill: #67b1ff;
+        }
+        svg #haze {
+            fill: tan;
+        }
+        svg #lightning {
+            fill: #f6dd38;
+        }
+        svg #lightning2 {
+            fill: #f6d964;
+        }
+        svg #sleet {
+            fill: #4a5141;
+        }
+        svg #snow {
+            fill: #b8d4ff;
+        }
+        svg #snowflake {
+            fill: #7294ff;
+        }
+        svg #dust {
+            fill: tan;
+        }
+        svg #dust2 {
+            fill: gray;
+        }
+        svg #fire {
+            fill: red;
+        }
+        svg #fire2 {
+            fill: #5f1604;
+        }
+        svg #water {
+            fill: #0031f7;
+        }
+        svg #flag-gale-1 {
+            fill: red;
+        }
+        svg #flag-gale-2 {
+            fill: red;
+        }
+        svg #horizon {
+            fill: black;
+        }
+        svg #heat {
+            fill: #fc5146;
+        }
+        svg #flag-hurricane-1 {
+            fill: red;
+        }
+        svg #flag-hurricane-2 {
+            fill: red;
+        }
+        svg #hurricane {
+            fill: blue;
+        }
+        svg #meteor {
+            fill: red;
+        }
+        svg #moon {
+            fill: #aae5ff;
+        }
+        svg #flag-storm-1 {
+            fill: red;
+        }
+        svg #flag-small-craft-advisory-1 {
+            fill: red;
+        }
+        svg #star {
+            fill: #f6dd38;
+        }
+        svg #smoke {
+            fill: gray;
+        }
+        svg #smog {
+            fill: #7f5e49;
+        }
+        svg #sand {
+            fill: tan;
+        }
+        svg #thermometer-inner {
+            fill: red;
+        }
+        svg #alien {
+            fill: green;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div id="images">
+        {% for icon in icons %}
+            <div class="image">
+                <img class="inline-svg" src="{{ url_for('.static', filename='images/' + icon) }}">
+                {{ icon }}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

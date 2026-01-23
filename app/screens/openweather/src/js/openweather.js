@@ -56,7 +56,7 @@ import Chart from 'chart.js/auto'
           },
           tooltip: {
             enabled: false
-          }
+          },
         },
         scales: {
           x: {
@@ -117,7 +117,7 @@ import Chart from 'chart.js/auto'
             data: window.graph_data.map(row => row.temp),
             yAxisID: 'yTemp',
             pointStyle: false,
-            borderColor: '#000',
+            borderColor: js_color('.openweather.graph.temperature', 'color'),
             borderWidth: 2,
             order: 1,
           },
@@ -126,7 +126,7 @@ import Chart from 'chart.js/auto'
             label: 'Precipitation',
             data: window.graph_data.map(row => row.precip * 100),
             yAxisID: 'yPercent',
-            backgroundColor: bgPattern(),
+            backgroundColor: js_color('.openweather.graph.precipitation', 'color', bgPattern()),
             order: 2,
           },
           {
@@ -135,8 +135,8 @@ import Chart from 'chart.js/auto'
             data: window.graph_data.map(row => row.humid * 100),
             yAxisID: 'yPercent',
             showLine: false,
-            pointBackgroundColor: '#fff',
-            pointBorderColor: '#000',
+            pointBackgroundColor: js_color('.openweather.graph.humidity', 'background-color', '#fff'),
+            pointBorderColor: js_color('.openweather.graph.humidity', 'color'),
             order: 0,
           },
         ]
