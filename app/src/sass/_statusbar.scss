@@ -1,5 +1,6 @@
 @use "breakpoints" as *;
 @use "vars" as *;
+@use "colors" as *;
 
 #statusbar {
     height: $statusbar_height;
@@ -13,10 +14,58 @@
     .statusbar-item {
         height: 100%;
 
-        img {
+        img, svg {
             display: inline-block;
             vertical-align: middle;
             height: 100%;
+            width: auto;
+        }
+    }
+}
+
+svg {
+    // Default fill; suitable for B&W
+    path {
+        fill: black;
+    }
+}
+
+.cs-3b, .cs-3b7 {
+    svg {
+        &.good {
+            path {
+                fill: $c-3b-green;
+            }
+        }
+        &.ok {
+            path {
+                fill: $c-3b-yellow;
+            }
+        }
+        &.bad {
+            path {
+                fill: $c-3b-red;
+            }
+        }
+    }
+}
+
+.cs-16b, .cs-full {
+    svg {
+        &.good {
+            path {
+                fill: green;
+            }
+        }
+        &.ok {
+            path {
+                fill: #f6dd38;
+            }
+        }
+        &.bad {
+            path {
+                fill: red;
+            }
         }
     }
 }
