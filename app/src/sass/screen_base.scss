@@ -38,4 +38,8 @@ body {
         flex-grow: 1;
         max-height: calc(100% - $statusbar_height);
     }
+
+    #js_colors {
+        display: none;
+    }
 }

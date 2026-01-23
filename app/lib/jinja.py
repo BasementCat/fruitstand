@@ -153,4 +153,9 @@ def now():
     return arrow.utcnow()
 
 
+@jglobal()
+def js_color(name):
+    return Markup(f'<span class="js-color {name}"></span>')
+
+
 jglobal()(users_enabled)

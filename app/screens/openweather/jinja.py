@@ -94,6 +94,13 @@ def weather_convert(value, to_units, what, d=2, from_units='standard'):
     return Markup(f'{value} <span class="suffix">{suffix}</span>')
 
 
+@jfilter()
+@jglobal()
+def wi(name, extra_class=''):
+    url = url_for('fruitstand_openweather.static', filename=f'images/{name}.svg')
+    return Markup(f'<img class="inline-svg wi {name} {extra_class}" src="{url}">')
+
+
 @jglobal()
 def get_conditions_image(forecast):
     """\
@@ -330,4 +337,4 @@ def get_conditions_image(forecast):
         else:
             image_name = 'wi-na'
 
-    return url_for('fruitstand_openweather.static', filename=f'images/{image_name}.svg')
+    return image_name

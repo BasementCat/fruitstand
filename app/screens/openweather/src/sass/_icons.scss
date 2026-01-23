@@ -1,0 +1,150 @@
+@use "colors" as *;
+
+svg {
+    // Default fill; suitable for B&W
+    path {
+        fill: black;
+    }
+}
+
+.cs-3b, .cs-3b7 {
+    svg {
+        #biohazard, #error, #radiation, #fire, #meteor, #flag-gale-1, #flag-gale-2, #flag-hurricane-1, #flag-hurricane-2, #flag-storm-1, #flag-small-craft-advisory-1, #thermometer-inner {
+            fill: $c-3b-red;
+        }
+        #error-text, #warning-text, #eye-pupil, #text, #line, #indicator, #horizon {
+            fill: $c-3b-black;
+        }
+        #eye {
+            fill: $c-3b-green;
+        }
+        #warning, #sun, #lightning, #star {
+            fill: $c-3b-yellow;
+        }
+        #wind, #dust2, #smoke {
+            fill: $c-3b-black;
+        }
+        #cloud, #hail {
+            fill: $c-3b-black;
+        }
+        #cloud2 {
+            fill: $c-3b-black;
+        }
+        #fog {
+            fill: $c-3b-blue;
+        }
+        #rain {
+            fill: $c-3b-blue;
+        }
+        #haze, #dust, #sand {
+            fill: $c-3b-black;
+        }
+        #lightning2 {
+            fill: $c-3b-yellow;
+        }
+        #sleet {
+            fill: $c-3b-blue;
+        }
+        #snow {
+            fill: $c-3b-blue;
+        }
+        #snowflake {
+            fill: $c-3b-blue;
+        }
+        #fire2 {
+            fill: $c-3b-red;
+        }
+        #water {
+            fill: $c-3b-blue;
+        }
+        #heat {
+            fill: $c-3b-red;
+        }
+        #hurricane {
+            fill: $c-3b-blue;
+        }
+        #moon {
+            fill: $c-3b-black;
+        }
+        #smog {
+            fill: $c-3b-black;
+        }
+        #alien {
+            fill: $c-3b-green;
+        }
+    }
+}
+
+.cs-3b7 {
+    svg {
+        #haze, #dust, #sand, #wind {
+            fill: $c-3b7-dkyellow;
+        }
+    }
+}
+
+.cs-16b, .cs-full {
+    svg {
+        #biohazard, #error, #radiation, #fire, #meteor, #flag-gale-1, #flag-gale-2, #flag-hurricane-1, #flag-hurricane-2, #flag-storm-1, #flag-small-craft-advisory-1, #thermometer-inner {
+            fill: red;
+        }
+        #error-text, #warning-text, #eye, #eye-pupil, #text, #line, #indicator, #horizon {
+            fill: black;
+        }
+        #warning, #sun, #lightning, #star {
+            fill: #f6dd38;
+        }
+
+        #wind, #dust2, #smoke {
+            fill: gray;
+        }
+        #cloud, #hail {
+            fill: #ccc;
+        }
+        #cloud2 {
+            fill: #ddd;
+        }
+        #fog {
+            fill: #888;
+        }
+        #rain {
+            fill: #67b1ff;
+        }
+        #haze, #dust, #sand {
+            fill: tan;
+        }
+        #lightning2 {
+            fill: #f6d964;
+        }
+        #sleet {
+            fill: #4a5141;
+        }
+        #snow {
+            fill: #b8d4ff;
+        }
+        #snowflake {
+            fill: #7294ff;
+        }
+        #fire2 {
+            fill: #5f1604;
+        }
+        #water {
+            fill: #0031f7;
+        }
+        #heat {
+            fill: #fc5146;
+        }
+        #hurricane {
+            fill: blue;
+        }
+        #moon {
+            fill: #aae5ff;
+        }
+        #smog {
+            fill: #7f5e49;
+        }
+        #alien {
+            fill: green;
+        }
+    }
+}

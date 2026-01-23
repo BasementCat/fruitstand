@@ -1,0 +1,44 @@
+@use "colors" as *;
+
+// default - hide so not used
+#js_colors {
+    .openweather {
+        &.graph {
+            visibility: hidden;
+        }
+    }
+}
+
+.cs-3b, .cs-3b7 {
+    #js_colors {
+        .openweather {
+            &.graph {
+                visibility: visible;
+                &.humidity {
+                    color: $c-3b-black;
+                    background-color: $c-3b-green;
+                }
+                &.precipitation {
+                    color: $c-3b-blue;
+                }
+            }
+        }
+    }
+}
+
+.cs-16b, .cs-full {
+    #js_colors {
+        .openweather {
+            &.graph {
+                visibility: visible;
+                &.humidity {
+                    color: #444;
+                    background-color: #62e941;
+                }
+                &.precipitation {
+                    color: #4f8eff;
+                }
+            }
+        }
+    }
+}
