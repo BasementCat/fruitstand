@@ -24,6 +24,8 @@ def DisplayEditForm(obj=None, **kwargs):
         name = StringField('Display Name', validators=[DataRequired()])
         if current_app.config['ENABLE_DISPLAY_APPROVAL']:
             form_status = SelectField("Status", choices=[(k, v) for k, v in DISP_STATUS.items()], validators=[DataRequired()])
+        image_format = SelectField("Image Format", choices=[('BMP', 'BMP'), ('JPEG', 'JPEG'), ('PNG', 'PNG')], validators=[DataRequired()])
+        image_bit_depth = SelectField("Image Bit Depth", choices=[(None, 'Default'), (1, '1 bit (monochrome)'), (16, '16 bit'), (24, '24 bit')], validators=[Optional()])
         playlist = QuerySelectField('Playlist',
             validators=[Optional()],
             query_factory=lambda: Playlist.query.order_by(Playlist.name.asc()),
