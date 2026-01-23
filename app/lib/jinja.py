@@ -123,6 +123,31 @@ def color_spec(value):
 
 
 @jfilter()
+def image_format(value):
+    level = 'default'
+    if value == 'BMP':
+        level = 'info'
+    if value == 'JPEG':
+        level = 'primary'
+    if value == 'PNG':
+        level = 'success'
+    return label(value, level=level)
+
+
+@jfilter()
+def image_bit_depth(value):
+    level = 'default'
+    if value is not None:
+        if value >= 24:
+            level = 'success'
+        elif value >= 16:
+            level = 'info'
+        elif value >= 1:
+            level = 'primary'
+    return label(value or 'Default', level=level)
+
+
+@jfilter()
 def fixed(value, d=2):
     if value is not None:
         if d:

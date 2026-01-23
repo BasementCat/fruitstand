@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from PIL import Image
 
@@ -19,10 +19,9 @@ def convert_palette(palette: List[int]) -> List[int]:
     return out
 
 
-def convert_colors(color_spec: str, input_path: str):
+def convert_colors__cs(color_spec: str, in_im):
+    """Initial conversion to what's specified in color_spec"""
     cs = COLOR_SPEC.get(color_spec, COLOR_SPEC['1b'])
-
-    in_im = Image.open(input_path).convert('RGB')
 
     if cs['bits'] == 1:
         mode = '1'
@@ -52,3 +51,25 @@ def convert_colors(color_spec: str, input_path: str):
         out_im.paste(in_im, tuple([0, 0] + list(in_im.size)))
 
     return out_im
+
+
+def convert_colors__bits(bit_depth: Optional[int], in_im):
+    """Second conversion to actual bit depth"""
+    if bit_depth:
+        if bit_depth >= 16:
+            return in_im.convert('RGB')
+        else:
+            # must be 1, 16, 24 - this case would be 1 bit
+            out_im = Image.new('1', in_im.size)
+            in_im = in_im.convert('L')
+            in_im = in_im.point(lambda p: 255 if p >= 170 else 0)
+            out_im.paste(in_im, tuple([0, 0] + list(in_im.size)))
+            return out_im
+    return in_im
+
+
+def convert_colors(bit_depth: Optional[int], color_spec: str, input_path: str):
+    im = Image.open(input_path).convert('RGB')
+    im = convert_colors__cs(color_spec, im)
+    im = convert_colors__bits(bit_depth, im)
+    return im

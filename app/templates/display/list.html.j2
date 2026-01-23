@@ -18,6 +18,7 @@
                             <th>Last Seen</th>
                             <th>Type</th>
                             <th>Colors</th>
+                            <th>Image</th>
                             <th>Dimensions</th>
                             {% if config['ENABLE_DISPLAY_APPROVAL'] %}
                                 <th>Status</th>
@@ -38,6 +39,10 @@
                                 <td>{{ d.last_seen_at |dt |typed_label }}</td>
                                 <td>{{ d.display_spec |display_spec }}</td>
                                 <td>{{ d.color_spec |color_spec }}</td>
+                                <td style="white-space: nowrap;">
+                                    {{ d.image_format |image_format }}
+                                    {{ d.image_bit_depth |image_bit_depth }}
+                                </td>
                                 <td>{{ d.width }}x{{ d.height }}</td>
                                 {% if config['ENABLE_DISPLAY_APPROVAL'] %}
                                     <td>
