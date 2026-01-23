@@ -2,7 +2,9 @@ name: Build and publish Docker container
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
+      - develop
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
@@ -37,11 +39,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
+      - name: Docker meta
         id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{raw}},enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         id: build-and-push
