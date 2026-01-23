@@ -337,4 +337,4 @@ def get_conditions_image(forecast):
         else:
             image_name = 'wi-na'
 
-    return url_for('fruitstand_openweather.static', filename=f'images/{image_name}.svg')
+    return image_name

@@ -1,4 +1,5 @@
 @use "breakpoints" as *;
+@use "icons";
 
 #weather {
     display: block;
@@ -12,7 +13,7 @@
         display: none;
     }
     .current {
-        img {
+        .icon {
             display: none;
         }
         .details {
@@ -46,7 +47,7 @@
             .current {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                img {
+                .icon {
                     display: block;
                 }
                 .temp {
@@ -82,7 +83,7 @@
     }
 
     @include bp(xs) {
-        .row-1 .loc-forecast .forecast-item img {
+        .row-1 .loc-forecast .forecast-item .icon {
             max-height: 3em;
         }
     }
@@ -101,7 +102,7 @@
             .current {
                 display: flex;
                 flex-direction: column;
-                img {
+                .icon {
                     max-height: 4em;
                 }
                 .temp {
@@ -191,7 +192,7 @@
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 align-items: center;
-                img {
+                .icon {
                     max-height: unset;
                 }
                 .temp {
