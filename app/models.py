@@ -319,6 +319,8 @@ class Display(Base):
     last_seen_at = db.Column(sau.ArrowType(), nullable=False, default=arrow.utcnow)
     display_spec = db.Column(sau.ChoiceType(choices=[(k, v['name']) for k, v in DISPLAY_SPEC.items()]), nullable=False)
     color_spec = db.Column(sau.ChoiceType(choices=[(k, v['name']) for k, v in COLOR_SPEC.items()]), nullable=False)
+    image_format = db.Column(sau.ChoiceType(choices=[('BMP', 'BMP'), ('JPEG', 'JPEG'), ('PNG', 'PNG')]), nullable=False, default='BMP', server_default='BMP')
+    image_bit_depth = db.Column(db.Integer())
     width = db.Column(db.Integer(), nullable=False, default=0)
     height = db.Column(db.Integer(), nullable=False, default=0)
     playlist_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), db.ForeignKey(Playlist.id, onupdate='CASCADE', ondelete='SET NULL', name='fk_display_playlist'))
@@ -365,6 +367,9 @@ class Display(Base):
                 'name': key,
                 'status': 'pending' if current_app.config['ENABLE_DISPLAY_APPROVAL'] else 'active',
                 'approval_code': cls.generate_approval_code(),
+                # Set image details on create only; this allows for editing later
+                'image_format': request.args.get('i', 'BMP'),
+                'image_bit_depth': request.args.get('ib'),
             })
             display = cls.query.filter(cls.key == key).first()
             if display:

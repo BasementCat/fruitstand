@@ -65,13 +65,14 @@ def render():
                 '--path', path,
                 '--browser', current_app.config['BROWSER'],
             ])
-            im = convert_colors(screen.display.color_spec, path)
+            im = convert_colors(screen.display.image_bit_depth, screen.display.color_spec, path)
             out = BytesIO()
-            im.save(out, 'bmp')
+            fmt = screen.display.image_format.code.lower()
+            im.save(out, fmt)
             l = out.tell()
             out.seek(0)
             payload = out
-            headers.update({'Content-length': l, 'Content-type': 'image/bmp'})
+            headers.update({'Content-length': l, 'Content-type': f'image/{fmt}'})
         finally:
             if os.path.exists(path):
                 os.unlink(path)
