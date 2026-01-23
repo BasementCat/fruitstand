@@ -73,6 +73,9 @@
                 {% endif %}
             {% endblock %}
         </div>
+        <div id="js_colors">
+            {% block js_colors %}{% endblock %}
+        </div>
         {% block scripts %}
             <script src="{{ url_for('static', filename='js/screen_helpers.js') }}"></script>
         {% endblock %}

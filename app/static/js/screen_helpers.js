@@ -10,8 +10,19 @@ document.querySelectorAll('img.inline-svg').forEach(el => {
             // width/height are not useful
             svg.setAttribute('width', '');
             svg.setAttribute('height', '');
-            console.log(svg.width, svg.height);
             el.replaceWith(svg);
         });
     });
 });
+
+function js_color(selector, property, dfl) {
+    const el = document.querySelector('#js_colors ' + selector);
+    let out;
+    if (el) {
+        const s = getComputedStyle(el);
+        if (s && s.getPropertyValue('visibility') != 'hidden') {
+            out = s.getPropertyValue(property);
+        }
+    }
+    return out || dfl || 'black';
+}

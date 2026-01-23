@@ -11,6 +11,13 @@
     <script src="{{ url_for('fruitstand_openweather.static', filename='js/openweather.js') }}"></script>
 {% endblock %}
 
+{% block js_colors %}
+    {{ super() }}
+    {{ js_color('openweather graph temperature') }}
+    {{ js_color('openweather graph humidity') }}
+    {{ js_color('openweather graph precipitation') }}
+{% endblock %}
+
 {% block content %}
     <div id="weather">
         <div class="row-1">
