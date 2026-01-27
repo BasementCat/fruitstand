@@ -18,7 +18,8 @@ login_manager = LoginManager()
 
 
 def create_app():
-    from app.lib.screen import Screen, ScreenLoadError
+    from app.lib.screen import Screen
+    from app.lib.exc import ScreenLoadError
 
     app = Flask(__name__)
 

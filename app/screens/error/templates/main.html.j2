@@ -58,7 +58,13 @@
             <img class="image" src="{{ url_for('fruitstand_error.static', filename='images/error.svg') }}">
             <div class="text">
                 <h1 class="title">{{ screen.context.extra.error.title if screen.context.extra and screen.context.extra.error else "Error" }}</h1>
-                <p class="error">{{ screen.context.extra.error.message if screen.context.extra and screen.context.extra.error else "Unknown Error" }}</p>
+                <p class="error">
+                    {{ screen.context.extra.error.message if screen.context.extra and screen.context.extra.error else "Unknown Error" }}
+                    {% if screen.context.extra and screen.context.extra.error %}
+                        <br>
+                        <small>ID: {{ screen.context.extra.error.id }}</small>
+                    {% endif %}
+                </p>
             </div>
         </div>
     </div>

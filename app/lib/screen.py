@@ -7,15 +7,9 @@ from flask import Blueprint, Flask, url_for, request, current_app
 from flask_wtf import FlaskForm
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from app.models import Display, Config, Playlist, PlaylistScreen
+from app.models import Display, DisplayProxy, Config, Playlist, PlaylistScreen
 from app.lib.jinja import apply_jinja_to_env
-
-
-class ScreenError(Exception):pass
-class ScreenLoadError(ScreenError):pass
-class DisplayNotFound(ScreenLoadError):pass
-class PlaylistNotFound(ScreenLoadError):pass
-class ScreenNotFound(ScreenLoadError):pass
+from app.lib import exc
 
 
 class Screen:
@@ -30,7 +24,7 @@ class Screen:
     default_config: Dict[str, Any] = {}
     _is_system: bool = False
 
-    def __init__(self, display: Display, playlist: Optional[Playlist], playlist_screen: Optional[PlaylistScreen], screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any], system: bool=False):
+    def __init__(self, display: Display, playlist: Optional[Playlist], playlist_screen: Optional[PlaylistScreen], screen_config: Dict[str, Any], playlist_config: Dict[str, Any], context: Dict[str, Any]):
         self.display = display
         self.playlist = playlist
         self.playlist_screen = playlist_screen
@@ -40,7 +34,6 @@ class Screen:
         self.config.update(self.screen_config)
         self.config.update(self.playlist_config)
         self.context = dict(context)
-        self.system = system
 
         loader = FileSystemLoader([
             os.path.join(current_app.root_path, current_app.template_folder, 'screen_templates'),
@@ -54,8 +47,7 @@ class Screen:
 
     @property
     def refresh_interval(self):
-        if self.system:
-            # won't have playlist/playlist_screen
+        if not (self.playlist_screen and self.playlist):
             return 600
 
         return self.playlist_screen.refresh_interval or self.playlist.default_refresh_interval
@@ -98,77 +90,71 @@ class Screen:
 
     @classmethod
     def load_for_render(cls, display_id: Optional[int]=None, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Self:
-        if display_id:
-            display = Display.query.get(display_id)
-        else:
-            display = Display.sync()
-        if not display:
-            raise DisplayNotFound(display_id)
+        display = Display.sync(display_id=display_id)
+        exc_args = {
+            'display': display,
+            'display_id': display_id,
+            'playlist_id': playlist_id,
+            'playlist_screen_id': playlist_screen_id,
+        }
 
-        system = False
-        screen_cls_key = None
-        extra_context = {}
-
-        if current_app.config['ENABLE_DISPLAY_AUTH']:
-            # Display must have passed a valid secret key
-            if not (display.display_secret and display.display_secret.status != 'disabled'):
-                system = True
-                screen_cls_key = 'fruitstand/error'
-                extra_context.update({
-                    'error': {
-                        'title': "Unauthenticated",
-                        'message': "This screen is not authenticated.",
-                    }
-                })
-
-        # If we've already set the class to load because of the above error, then skip this part
-        # auth takes precedence over approval
-        if not screen_cls_key and current_app.config['ENABLE_DISPLAY_APPROVAL']:
-            # Display must have been approved by someone prior to rendering
-            if display.status == 'pending':
-                system = True
-                screen_cls_key = 'fruitstand/approval_code'
-            elif display.status == 'disapproved':
-                system = True
-                screen_cls_key = 'fruitstand/error'
-                extra_context.update({
-                    'error': {
-                        'title': "Disapproved",
-                        'message': "This screen is not approved.",
-                    }
-                })
-
-        playlist = playlist_screen = None
-        playlist_config = {}
-        screen_config = {}
-        if not system:
-            playlist, playlist_screen = display.get_playlist_screen(
-                playlist_id=playlist_id,
-                playlist_screen_id=playlist_screen_id,
-            )
-            if not (playlist and playlist_screen):
-                raise PlaylistNotFound((playlist_id, playlist_screen_id, display.id))
-
-            screen_cls_key = playlist_screen.screen.key
-            playlist_config = Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen)
-            screen_config = Config.load(screen=playlist_screen.screen)
-
-        screen_cls = cls.get(screen_cls_key)
-        if not screen_cls:
-            raise ScreenNotFound((
-                screen_cls_key,
-                playlist.id if playlist else None,
-                playlist_screen.id if playlist_screen else None,
-                display.id
-            ))
-
-        context = {'metrics': {}, 'extra': extra_context}
+        context = {'metrics': {}, 'extra': {}}
         for k in ('metrics', 'extra'):
             # JSON args
             try:
                 context[k].update(json.loads(request.args.get(k, '{}')))
             except:
                 pass
-        context.update(display.get_context())
 
-        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context, system=system)
+        try:
+            if not (display.key and display.display):
+                # no display was found or could be synced
+                raise exc.DisplayNotFound(**exc_args)
+
+            context.update(display.display.get_context())
+
+            if current_app.config['ENABLE_DISPLAY_AUTH']:
+                # Display must have passed a valid secret key
+                if not (display.display_secret and display.display_secret.status != 'disabled'):
+                    raise exc.DisplayNotAuthenticated(
+                        title='Unauthenticated',
+                        message="This display is not authenticated.",
+                        **exc_args,
+                    )
+
+            if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+                # Display must have been approved by someone prior to rendering
+                if display.status == 'pending':
+                    raise exc.DisplayPendingApproval(**exc_args)
+                elif display.status == 'disapproved':
+                    raise exc.DisplayNotApproved(
+                        title='Disapproved',
+                        message="This display is not approved.",
+                        **exc_args,
+                    )
+
+            playlist, playlist_screen = display.display.get_playlist_screen(
+                playlist_id=playlist_id,
+                playlist_screen_id=playlist_screen_id,
+            )
+            if not (playlist and playlist_screen):
+                raise exc.PlaylistNotFound(title='Playlist Not Found', message="This display does not have a playlist configured.", **exc_args)
+
+            screen_cls_key = playlist_screen.screen.key
+            playlist_config = Config.load(screen=playlist_screen.screen, playlist_screen=playlist_screen)
+            screen_config = Config.load(screen=playlist_screen.screen)
+
+            exc_args['screen_cls_key'] = screen_cls_key
+            screen_cls = cls.get(screen_cls_key)
+            if not screen_cls:
+                raise exc.ScreenNotFound(**exc_args)
+        except exc.ScreenError as e:
+            e.log()
+            display = e.display
+            screen_cls_key = e.error_screen_cls_key
+            screen_cls = cls.get(screen_cls_key)
+            playlist = playlist_screen = None
+            screen_config = playlist_config = {}
+            context['extra'].update({'error': e.get_error_context()})
+
+        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context)

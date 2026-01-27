@@ -308,6 +308,114 @@ class DisplaySecret(Base):
         self.status = value
 
 
+class DisplayProxy:
+    """\
+    Proxy class for displays in the case that a display can't actually be
+    loaded.  This class allows for capturing the required parameters for
+    rendering, in order to display errors.
+    """
+
+    @classmethod
+    def generate_approval_code(cls):
+        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
+            return str(random.randint(100000, 999999))
+
+    def __init__(self, display_id: Optional[int]=None):
+        if display_id:
+            display = Display.query.get(display_id)
+            if display:
+                self._update_from_display(display)
+                return
+
+        key = request.args.get('k')
+        sk = request.args.get('sk')
+        secret = None
+        if sk:
+            # always update; we don't care about whether it exists or status
+            secret = DisplaySecret.query.filter(DisplaySecret.key == sk).first()
+        self.id = None
+        self.key = key
+        self.status = 'pending' if current_app.config['ENABLE_DISPLAY_APPROVAL'] else 'active'
+        self.approval_code = self.generate_approval_code()
+        self.name = key
+        self.created_at = arrow.utcnow()
+        self.last_seen_at = arrow.utcnow()
+        self.display_spec = request.args.get('ds') or 'static'
+        self.color_spec = request.args.get('cs') or '1b'
+        self.image_format = request.args.get('i') or 'BMP'
+        self.image_bit_depth = request.args.get('ib')
+        self.width = request.args.get('w') or 480
+        self.height = request.args.get('h') or 320
+        self.playlist = None
+        self.last_playlist_screen = None
+        self.display_secret = secret
+
+    def _update_display(self, display):
+        """Update the given display with parameters from this instance"""
+        if display:
+            for k, v in self.update_params.items():
+                setattr(display, k, v)
+        else:
+            display = Display(**self.create_params)
+            db.session.add(display)
+        db.session.commit()
+        return display
+
+    def _update_from_display(self, display):
+        """Update this instance with properties from the given display"""
+        self._display = display
+        self.id = display.id
+        self.key = display.key
+        self.status = display.status
+        self.approval_code = display.approval_code
+        self.name = display.name
+        self.created_at = display.created_at
+        self.last_seen_at = display.last_seen_at
+        self.display_spec = display.display_spec
+        self.color_spec = display.color_spec
+        self.image_format = display.image_format
+        self.image_bit_depth = display.image_bit_depth
+        self.width = display.width
+        self.height = display.height
+        self.playlist = display.playlist
+        self.last_playlist_screen = display.last_playlist_screen
+        self.display_secret = display.display_secret
+
+    @property
+    def update_params(self):
+        return {
+            'last_seen_at': self.last_seen_at,
+            'display_spec': self.display_spec,
+            'color_spec': self.color_spec,
+            'width': self.width,
+            'height': self.height,
+            'display_secret': self.display_secret,
+        }
+
+    @property
+    def create_params(self):
+        out = dict(self.update_params)
+        out.update({
+            'key': self.key,
+            'name': self.key,
+            'status': self.status,
+            'approval_code': self.approval_code,
+            # Set image details on create only; this allows for editing later
+            'image_format': self.image_format,
+            'image_bit_depth': self.image_bit_depth,
+        })
+        return out
+
+    @property
+    def display(self):
+        if not hasattr(self, '_display'):
+            self._display = None
+            if self.key:
+                self._display = self._update_display(Display.query.filter(Display.key == self.key).first())
+                self._update_from_display(self._display)
+        return self._display
+
+
 class Display(Base):
     __tablename__ = 'display'
     id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
@@ -340,46 +448,11 @@ class Display(Base):
         self.status = value
 
     @classmethod
-    def generate_approval_code(cls):
-        if current_app.config['ENABLE_DISPLAY_APPROVAL']:
-            return str(random.randint(100000, 999999))
-
-    @classmethod
-    def sync(cls):
-        key = request.args.get('k')
-        if key:
-            sk = request.args.get('sk')
-            secret = None
-            if sk:
-                # always update; we don't care about whether it exists or status
-                secret = DisplaySecret.query.filter(DisplaySecret.key == sk).first()
-            update_params = {
-                'last_seen_at': arrow.utcnow(),
-                'display_spec': request.args.get('ds'),
-                'color_spec': request.args.get('cs'),
-                'width': request.args.get('w'),
-                'height': request.args.get('h'),
-                'display_secret': secret,
-            }
-            create_params = dict(update_params)
-            create_params.update({
-                'key': key,
-                'name': key,
-                'status': 'pending' if current_app.config['ENABLE_DISPLAY_APPROVAL'] else 'active',
-                'approval_code': cls.generate_approval_code(),
-                # Set image details on create only; this allows for editing later
-                'image_format': request.args.get('i', 'BMP'),
-                'image_bit_depth': request.args.get('ib'),
-            })
-            display = cls.query.filter(cls.key == key).first()
-            if display:
-                for k, v in update_params.items():
-                    setattr(display, k, v)
-            else:
-                display = cls(**create_params)
-                db.session.add(display)
-            db.session.commit()
-            return display
+    def sync(cls, display_id: Optional[int]=None):
+        proxy = DisplayProxy(display_id=display_id)
+        # force sync in case of no display_id
+        _ = proxy.display
+        return proxy
 
     def get_playlist_screen(self, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Tuple[Optional[Playlist], Optional[PlaylistScreen]]:
         if playlist_id:
