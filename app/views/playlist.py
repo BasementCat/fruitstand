@@ -119,7 +119,7 @@ def edit_screens(playlist_id):
         db.session.commit()
         return redirect(url_for('.edit_screens', playlist_id=playlist_id))
 
-    screens = Screen.query.filter(Screen.system == False).order_by(Screen.title.asc())
+    screens = Screen.query.order_by(Screen.title.asc())
     return render_template('playlist/edit_screens.html.j2', playlist=playlist, screens=screens)
 
 

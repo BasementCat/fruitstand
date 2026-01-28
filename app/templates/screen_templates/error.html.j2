@@ -1,4 +1,4 @@
-{% extends "base.html.j2" %}
+{% extends "screen_templates/base.html.j2" %}
 
 {% block styles %}
     {{ super() }}
@@ -55,10 +55,14 @@
 {% block content %}
     <div id="error_container">
         <div id="error_wrapper">
-            <img class="image" src="{{ url_for('fruitstand_error.static', filename='images/error.svg') }}">
+            <img class="image" src="{{ url_for('static', filename='images/error.svg') }}">
             <div class="text">
-                <h1 class="title">{{ screen.context.extra.error.title if screen.context.extra and screen.context.extra.error else "Error" }}</h1>
-                <p class="error">{{ screen.context.extra.error.message if screen.context.extra and screen.context.extra.error else "Unknown Error" }}</p>
+                <h1 class="title">{{ error.title }}</h1>
+                <p class="error">
+                    {{ error.message }}
+                    <br>
+                    <small>ID: {{ error.id }}</small>
+                </p>
             </div>
         </div>
     </div>
