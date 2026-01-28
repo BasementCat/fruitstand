@@ -1,7 +1,9 @@
 import os
 import importlib
+import traceback
 
-from flask import Flask, g, request, abort
+from werkzeug.exceptions import HTTPException
+from flask import Flask, g, request, abort, render_template
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -19,7 +21,7 @@ login_manager = LoginManager()
 
 def create_app():
     from app.lib.screen import Screen
-    from app.lib.exc import ScreenLoadError
+    from app.lib import exc
 
     app = Flask(__name__)
 
@@ -90,13 +92,28 @@ def create_app():
     @app.before_request
     def load_pls_config():
         if request.args.get('_render_display'):
-            display_id = int(request.args.get('display_id', 0))
-            if display_id:
-                pls_id = int(request.args.get('playlist_screen_id', 0))
-                try:
-                    g.screen = Screen.load_for_render(display_id=display_id, playlist_screen_id=pls_id)
-                except ScreenLoadError:
-                    abort(404)
-            else:
-                abort(404)
+            g.display = models.Display.sync(display_id=int(request.args.get('display_id', 0)))
+            g.screen = Screen.load_for_render(g.display, playlist_screen_id=int(request.args.get('playlist_screen_id', 0)))
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        if isinstance(e, HTTPException):
+            return e
+
+        if g.get('display'):
+            # Note that as Screen.load_for_render() has already been called, if the display doesn't exist in the DB, that already will have raised DisplayNotFound
+            # In all cases of other exceptions, the display proxy will have a real display instance associated
+            context = Screen.load_context(g.display)
+            if isinstance(e, exc.DisplayPendingApproval):
+                return render_template('screen_templates/pending_approval.html.j2', display=g.display, context=context)
+
+            if not isinstance(e, exc.ScreenError):
+                traceback.print_exception(e)
+                e = exc.ScreenError.from_exc(g.display, e)
+                e.log()
+
+            return render_template('screen_templates/error.html.j2', display=g.display, context=context, error=e)
+
+        return app.handle_exception(e)
+
     return app

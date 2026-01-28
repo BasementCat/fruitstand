@@ -3,8 +3,6 @@ import uuid
 
 
 class ScreenError(Exception):
-    error_screen_cls_key = 'fruitstand/error'
-
     def __init__(self, display, title=None, message='Internal Error', display_id=None, playlist_screen_id=None, playlist_id=None, screen_cls_key=None):
         title = title or self.__class__.__name__
         super().__init__(title, message, display_id, playlist_screen_id, playlist_id, screen_cls_key)
@@ -31,6 +29,21 @@ class ScreenError(Exception):
             self.playlist_screen_id, self.screen_cls_key
         ))
 
+    @classmethod
+    def from_exc(cls, display, other_exc, **kwargs):
+        new_kw = {'title': 'Internal Error', 'message': 'Internal Error'}
+        if isinstance(other_exc, ScreenError):
+            for k in ('title', 'message', 'display_id', 'playlist_screen_id', 'playlist_id', 'screen_cls_key'):
+                v = getattr(other_exc, k, None)
+                if v:
+                    new_kw[k] = v
+        new_kw.update(kwargs)
+        out = cls(display, **new_kw)
+        # Maintain the ID
+        if isinstance(other_exc, ScreenError):
+            out.id = other_exc.id
+        return out
+
 
 class ScreenLoadError(ScreenError):
     pass
@@ -49,8 +62,6 @@ class DisplayNotAuthenticated(DisplayAuthError):
 
 
 class DisplayPendingApproval(DisplayAuthError):
-    error_screen_cls_key = 'fruitstand/approval_code'
-
     def log(self):
         pass
 

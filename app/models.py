@@ -321,8 +321,8 @@ class DisplayProxy:
             return str(random.randint(100000, 999999))
 
     def __init__(self, display_id: Optional[int]=None):
-        if display_id:
-            display = Display.query.get(display_id)
+        if display_id is not None:
+            display = Display.query.get(display_id) if display_id else None
             if display:
                 self._update_from_display(display)
                 return

@@ -89,15 +89,7 @@ class Screen:
         app.register_blueprint(cls.blueprint, url_prefix='/screens/render/' + cls.key)
 
     @classmethod
-    def load_for_render(cls, display_id: Optional[int]=None, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Self:
-        display = Display.sync(display_id=display_id)
-        exc_args = {
-            'display': display,
-            'display_id': display_id,
-            'playlist_id': playlist_id,
-            'playlist_screen_id': playlist_screen_id,
-        }
-
+    def load_context(cls, display: Optional[DisplayProxy]=None):
         context = {'metrics': {}, 'extra': {}}
         for k in ('metrics', 'extra'):
             # JSON args
@@ -106,12 +98,24 @@ class Screen:
             except:
                 pass
 
+        if display and display.display:
+            context.update(display.display.get_context())
+
+        return context
+
+    @classmethod
+    def load_for_render(cls, display: DisplayProxy, playlist_id: Optional[int]=None, playlist_screen_id: Optional[int]=None) -> Self:
+        exc_args = {
+            'display': display,
+            'display_id': display.id,
+            'playlist_id': playlist_id,
+            'playlist_screen_id': playlist_screen_id,
+        }
+
         try:
             if not (display.key and display.display):
                 # no display was found or could be synced
                 raise exc.DisplayNotFound(**exc_args)
-
-            context.update(display.display.get_context())
 
             if current_app.config['ENABLE_DISPLAY_AUTH']:
                 # Display must have passed a valid secret key
@@ -150,11 +154,6 @@ class Screen:
                 raise exc.ScreenNotFound(**exc_args)
         except exc.ScreenError as e:
             e.log()
-            display = e.display
-            screen_cls_key = e.error_screen_cls_key
-            screen_cls = cls.get(screen_cls_key)
-            playlist = playlist_screen = None
-            screen_config = playlist_config = {}
-            context['extra'].update({'error': e.get_error_context()})
+            raise
 
-        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, context)
+        return screen_cls(display, playlist, playlist_screen, screen_config, playlist_config, cls.load_context(display))
