@@ -189,7 +189,6 @@ class Screen(Base):
     key = db.Column(db.Unicode(64), nullable=False, unique=True)
     present = db.Column(db.Boolean(), nullable=False, default=True)
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
-    system = db.Column(db.Boolean(), nullable=False, default=False)
     title = db.Column(db.UnicodeText(), nullable=False)
     description = db.Column(db.UnicodeText())
 
@@ -206,11 +205,10 @@ class Screen(Base):
         for screen_class in screen_classes:
             screen_obj = existing.get(screen_class.key)
             if not screen_obj:
-                screen_obj = cls(key=screen_class.key, enabled=screen_class._is_system)
+                screen_obj = cls(key=screen_class.key, enabled=False)
                 db.session.add(screen_obj)
                 existing[screen_class.key] = screen_obj
             screen_obj.present = True
-            screen_obj.system = screen_class._is_system
             screen_obj.title = screen_class.title
             screen_obj.description = screen_class.description
         db.session.commit()
