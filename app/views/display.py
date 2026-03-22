@@ -6,6 +6,7 @@ import urllib.parse
 import subprocess
 from io import BytesIO
 import functools
+import traceback
 
 from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file, current_app, jsonify
 import arrow
@@ -17,7 +18,7 @@ from app.constants import DISPLAY_SPEC, COLOR_SPEC
 from app.forms import DisplayEditForm, DisplaySecretEditForm
 from app.lib.metric import Metric
 from app.lib.screen import Screen as BaseScreen
-from app.lib.image import convert_colors
+from app.lib.image import convert_colors, render_error
 from app.lib.user import login_required, admin_required
 from app.lib import exc
 
@@ -78,6 +79,12 @@ def render():
                 '--browser', current_app.config['BROWSER'],
             ])
             im = convert_colors(display.image_bit_depth, display.color_spec, path)
+        except Exception as e:
+            int_exc = exc.ScreenError(display, title="Internal Error", message="Unexpected internal error when rendering")
+            int_exc.log()
+            traceback.print_exception(e)
+            im = render_error(display, int_exc)
+        finally:
             out = BytesIO()
             fmt = display.image_format.code.lower()
             im.save(out, fmt)
@@ -85,11 +92,9 @@ def render():
             out.seek(0)
             payload = out
             headers.update({'Content-length': l, 'Content-type': f'image/{fmt}'})
-        finally:
             if os.path.exists(path):
                 os.unlink(path)
 
-    # TODO: error handling - ideally render pretty error screen but worst case text/plain
     return payload, headers
 
 

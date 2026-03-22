@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from app.constants import COLOR_SPEC
 
@@ -69,7 +69,32 @@ def convert_colors__bits(bit_depth: Optional[int], in_im):
 
 
 def convert_colors(bit_depth: Optional[int], color_spec: str, input_path: str):
-    im = Image.open(input_path).convert('RGB')
+    if isinstance(input_path, str):
+        im = Image.open(input_path)
+    else:
+        im = input_path
+    im = im.convert('RGB')
     im = convert_colors__cs(color_spec, im)
     im = convert_colors__bits(bit_depth, im)
+    return im
+
+
+def render_text(im, text, draw):
+    lines = [[]]
+    for word in text.split(' '):
+        if lines[-1]:
+            test = ' '.join(lines[-1] + [word])
+            if draw.font.getlength(test) > im.size[0]:
+                lines.append([])
+        lines[-1].append(word)
+    lines = '\n'.join((' '.join(l) for l in lines)).strip()
+    draw.multiline_text((0, 0), lines, fill=(0, 0, 0))
+
+
+def render_error(display, exc):
+    im = Image.new('RGB', (display.width, display.height), (255, 255, 255))
+    d = ImageDraw.Draw(im)
+    d.font = ImageFont.load_default(size=16)
+    render_text(im, f'Error {exc.id}: {exc.title}: {exc.message}', d)
+    im = convert_colors(display.image_bit_depth, display.color_spec, im)
     return im
