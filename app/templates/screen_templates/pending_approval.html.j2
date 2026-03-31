@@ -1,4 +1,4 @@
-{% extends "base.html.j2" %}
+{% extends "screen_templates/base.html.j2" %}
 
 {% block styles %}
     {{ super() }}
@@ -42,7 +42,7 @@
             <h2 class="title">Display Setup</h2>
             <p class="description">This display must be approved before it is used, verify that the code displayed here matches the one displayed in the screen list</p>
             <h4 class="label">Code:</h4>
-            <h1 class="code">{{ display.approval_code }}</h1>
+            <h1 class="code">{{ g.display.approval_code }}</h1>
         </div>
     </div>
 {% endblock %}
