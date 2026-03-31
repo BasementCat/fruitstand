@@ -5,6 +5,8 @@ import hashlib
 import pickle
 import random
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 from flask import Flask
 import arrow
 
@@ -89,11 +91,11 @@ class FilesystemDriver(CacheDriver):
             raise RuntimeError("Filesystem cache dir does not exist or is not a directory: " + self.cache_dir)
 
     def _get_path(self, key: str) -> str:
-        return os.path.join(self.cache_dir, hashlib.new('sha256', key).hexdigest())
+        return os.path.join(self.cache_dir, hashlib.new('sha256', key.encode('utf-8')).hexdigest())
 
     def _load_key(self, key: str) -> Optional[Any]:
         filename = self._get_path(key)
-        if os.is_file(filename):
+        if os.path.isfile(filename):
             try:
                 with open(filename, 'rb') as fp:
                     res = pickle.load(fp)
@@ -102,7 +104,10 @@ class FilesystemDriver(CacheDriver):
             except:
                 pass
 
-            os.unlink(filename)
+            try:
+                os.unlink(filename)
+            except:
+                pass
 
     def get(self, key: str) -> Optional[Any]:
         res = self._load_key(key)
@@ -119,8 +124,11 @@ class FilesystemDriver(CacheDriver):
 
     def delete(self, key: str) -> bool:
         filename = self._get_path(key)
-        if os.is_file(filename):
-            os.unlink(filename)
+        try:
+            if os.path.isfile(filename):
+                os.unlink(filename)
+                return True
+        except FileNotFoundError:
             return True
         return False
 
@@ -134,12 +142,17 @@ class DatabaseDriver(CacheDriver):
         self.db = db
         self.CacheModel = CacheModel
 
-    def get(self, key: str) -> Optional[Any]:
+    def _maybe_cleanup(self):
         # 1% chance to clean up
         if random.random() <= 0.01:
-            self.CacheModel.query.filter(self.CacheModel.expires <= arrow.utcnow()).delete()
-            self.db.session.commit()
+            try:
+                self.CacheModel.query.filter(self.CacheModel.expires <= arrow.utcnow()).delete()
+                self.db.session.commit()
+            except IntegrityError:
+                self.db.session.rollback()
 
+    def get(self, key: str) -> Optional[Any]:
+        self._maybe_cleanup()
         obj = self.CacheModel.query.get(key)
         if obj:
             if obj.expires > arrow.utcnow():
@@ -147,23 +160,35 @@ class DatabaseDriver(CacheDriver):
                     return pickle.loads(obj.data)
                 except:
                     pass
-            self.db.session.delete(obj)
-            self.db.session.commit()
+            try:
+                self.db.session.delete(obj)
+                self.db.session.commit()
+            except IntegrityError:
+                self.db.session.rollback()
 
     def set(self, key: str, expiry: int, data: Any) -> bool:
-        obj = self.CacheModel.query.get(key)
-        if not obj:
-            obj = self.CacheModel(key=key)
-            self.db.session.add(obj)
-        obj.expires = arrow.utcnow().shift(seconds=expiry)
-        obj.data = pickle.dumps(data)
-        self.db.session.commit()
+        while True:
+            try:
+                obj = self.CacheModel.query.get(key)
+                if not obj:
+                    obj = self.CacheModel(key=key)
+                    self.db.session.add(obj)
+                obj.expires = arrow.utcnow().shift(seconds=expiry)
+                obj.data = pickle.dumps(data)
+                self.db.session.commit()
+                break
+            except (IntegrityError, StaleDataError):
+                self.db.session.rollback()
         return True
 
     def delete(self, key: str) -> bool:
         obj = self.CacheModel.query.get(key)
         if obj:
-            self.db.session.delete(obj)
-            self.db.session.commit()
-            return True
+            try:
+                self.db.session.delete(obj)
+                self.db.session.commit()
+                return True
+            except IntegrityError:
+                self.db.session.rollback()
+                return True
         return False

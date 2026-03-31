@@ -19,7 +19,7 @@ cache = Cache()
 login_manager = LoginManager()
 
 
-def create_app():
+def create_app(config=None):
     from app.lib.screen import Screen
     from app.lib import exc
 
@@ -40,6 +40,7 @@ def create_app():
     app.config['ENABLE_USERS'] = bool(app.config.get('ENABLE_USERS', False))
     app.config['ENABLE_DISPLAY_APPROVAL'] = bool(app.config.get('ENABLE_DISPLAY_APPROVAL', False))
     app.config['ENABLE_DISPLAY_AUTH'] = bool(app.config.get('ENABLE_DISPLAY_AUTH', False))
+    app.config.update(config or {})
 
     Bootstrap(app)
     db.init_app(app)
