@@ -41,7 +41,7 @@ RUN npm install --omit=dev
 USER root
 
 COPY Pipfile* ./
-RUN pipenv install --system --deploy --break-system-packages
+RUN PIP_BREAK_SYSTEM_PACKAGES=1 pipenv install --system --deploy
 
 COPY . .
 # RUN chown -R uwsgi:uwsgi /app
