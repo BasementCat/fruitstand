@@ -25,7 +25,7 @@ def DisplayEditForm(obj=None, **kwargs):
         if current_app.config['ENABLE_DISPLAY_APPROVAL']:
             form_status = SelectField("Status", choices=[(k, v) for k, v in DISP_STATUS.items()], validators=[DataRequired()])
         image_format = SelectField("Image Format", choices=[('BMP', 'BMP'), ('JPEG', 'JPEG'), ('PNG', 'PNG')], validators=[DataRequired()])
-        image_bit_depth = SelectField("Image Bit Depth", choices=[(None, 'Default'), (1, '1 bit (monochrome)'), (16, '16 bit'), (24, '24 bit')], validators=[Optional()])
+        image_bit_depth = SelectField("Image Bit Depth", choices=[(0, 'Default'), (1, '1 bit (monochrome)'), (16, '16 bit'), (24, '24 bit')], validators=[Optional()])
         playlist = QuerySelectField('Playlist',
             validators=[Optional()],
             query_factory=lambda: Playlist.query.order_by(Playlist.name.asc()),
@@ -39,6 +39,7 @@ def DisplayEditForm(obj=None, **kwargs):
         def populate_obj(self, obj):
             old_status = obj.status
             super().populate_obj(obj)
+            obj.image_bit_depth = self.image_bit_depth.data or None
             if current_app.config['ENABLE_DISPLAY_APPROVAL']:
                 if obj.status == 'pending' and old_status != 'pending':
                     # status has changed from another status to pending so regenerate/set the code
