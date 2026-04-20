@@ -6,6 +6,7 @@ import urllib.parse
 import subprocess
 from io import BytesIO
 import functools
+import traceback
 
 from flask import Blueprint, render_template, abort, flash, redirect, url_for, request, send_file, current_app, jsonify
 import arrow
@@ -17,8 +18,9 @@ from app.constants import DISPLAY_SPEC, COLOR_SPEC
 from app.forms import DisplayEditForm, DisplaySecretEditForm
 from app.lib.metric import Metric
 from app.lib.screen import Screen as BaseScreen
-from app.lib.image import convert_colors
+from app.lib.image import convert_colors, render_error
 from app.lib.user import login_required, admin_required
+from app.lib import exc
 
 
 bp = Blueprint('display', __name__)
@@ -26,14 +28,25 @@ bp = Blueprint('display', __name__)
 
 @bp.route('/render', methods=['GET'])
 def render():
-    screen = BaseScreen.load_for_render(
-        playlist_id=int(request.args.get('debug_playlist_id', 0)) or None,
-        playlist_screen_id=int(request.args.get('debug_playlist_screen_id', 0)) or None,
-    )
+    display = Display.sync()
+    playlist_screen_id = 0
+    refresh_interval = 600
+    route = '.render_screen_not_found'
+    try:
+        screen = BaseScreen.load_for_render(
+            display,
+            playlist_id=int(request.args.get('debug_playlist_id', 0)) or None,
+            playlist_screen_id=int(request.args.get('debug_playlist_screen_id', 0)) or None,
+        )
+        playlist_screen_id = screen.playlist_screen.id if screen.playlist_screen else 0
+        route = screen.route
+        refresh_interval = screen.refresh_interval
+    except exc.ScreenError as e:
+        pass
 
     args = {
-        'playlist_screen_id': screen.playlist_screen.id if screen.playlist_screen else None,
-        'display_id': screen.display.id,
+        'playlist_screen_id': playlist_screen_id,
+        'display_id': display.id or 0,
         'metrics': json.dumps(Metric.get_metrics()),
         '_render_display': 1,
     }
@@ -44,14 +57,14 @@ def render():
         # in certain environments like Docker, so "fix" it
         url = 'http://{}{}'.format(
             current_app.config['INTERNAL_WEB_HOST'],
-            url_for(screen.route, **args)
+            url_for(route, **args)
         )
     else:
-        url = url_for(screen.route, **args, _external=True)
+        url = url_for(route, **args, _external=True)
     headers = {
-        'X-Refresh-Time': screen.refresh_interval,
+        'X-Refresh-Time': refresh_interval,
     }
-    if screen.display.display_spec == 'browser':
+    if display.display_spec == 'browser':
         payload = requests.get(url).content
         headers.update({'Content-length': len(payload), 'Content-type': 'text/html'})
     else:
@@ -60,25 +73,34 @@ def render():
             subprocess.check_call([
                 'npm', 'run', 'render', '--',
                 '--url', url,
-                '--width', str(screen.display.width),
-                '--height', str(screen.display.height),
+                '--width', str(display.width),
+                '--height', str(display.height),
                 '--path', path,
                 '--browser', current_app.config['BROWSER'],
             ])
-            im = convert_colors(screen.display.image_bit_depth, screen.display.color_spec, path)
+            im = convert_colors(display.image_bit_depth, display.color_spec, path)
+        except Exception as e:
+            int_exc = exc.ScreenError(display, title="Internal Error", message="Unexpected internal error when rendering")
+            int_exc.log()
+            traceback.print_exception(e)
+            im = render_error(display, int_exc)
+        finally:
             out = BytesIO()
-            fmt = screen.display.image_format.code.lower()
+            fmt = display.image_format.code.lower()
             im.save(out, fmt)
             l = out.tell()
             out.seek(0)
             payload = out
             headers.update({'Content-length': l, 'Content-type': f'image/{fmt}'})
-        finally:
             if os.path.exists(path):
                 os.unlink(path)
 
-    # TODO: error handling - ideally render pretty error screen but worst case text/plain
     return payload, headers
+
+
+@bp.route('/render/not-found', methods=['GET'])
+def render_screen_not_found():
+    raise exc.ScreenNotFound()
 
 
 @bp.route('/', methods=['GET'])
