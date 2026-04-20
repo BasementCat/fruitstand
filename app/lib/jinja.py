@@ -1,6 +1,7 @@
 from flask import current_app
 from markupsafe import Markup
 import arrow
+import flask_login
 
 from app.constants import DISPLAY_SPEC, COLOR_SPEC
 from app.lib.user import users_enabled
@@ -75,8 +76,10 @@ def plural(value, singular, plural=None):
 @jfilter()
 def dt(value, format='MMM Do, YYYY h:mm a', timezone=None, no_markup=False):
     if value is not None:
-        # TODO: user tz
-        timezone = timezone or current_app.config['TIMEZONE']
+        user_tz = None
+        if current_app.config['ENABLE_USERS'] and flask_login.current_user.is_authenticated:
+            user_tz = getattr(flask_login.current_user, 'timezone', None)
+        timezone = timezone or user_tz or current_app.config['TIMEZONE']
         value = arrow.get(value)
         value_utc = value.to('UTC')
         value_utc_s = value_utc.format(format)
