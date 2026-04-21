@@ -1,0 +1,15 @@
+services:
+  app:
+    build: !reset null
+    image: ghcr.io/basementcat/fruitstand:master
+    command: [
+      '--master',
+      '--processes=4',
+      '--lazy-apps',
+      '--cheaper-algo=spare',
+      '--cheaper=2',
+      '--cheaper-initial=5',
+      '--workers=5',
+      '--cheaper-step=1',
+    ]
+    volumes: !reset []

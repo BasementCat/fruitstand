@@ -3,7 +3,7 @@ FROM alpine:3.19
 
 # FROM alpine:3.22
 
-EXPOSE 3031
+EXPOSE 8000
 
 RUN addgroup -S uwsgi && \
     adduser -S -G uwsgi uwsgi && \
@@ -13,6 +13,7 @@ WORKDIR /app
 
 RUN apk add --no-cache \
         uwsgi-python3 \
+        uwsgi-http \
         python3 \
         py3-pip \
         npm \
@@ -44,13 +45,12 @@ COPY Pipfile* ./
 RUN PIP_BREAK_SYSTEM_PACKAGES=1 pipenv install --system --deploy
 
 COPY . .
-# RUN chown -R uwsgi:uwsgi /app
-# RUN chmod -R 555 /app
 
-# TODO: more fleshed out uwsgi configuration
-
-ENTRYPOINT [ "/app/entrypoint.sh", \
+ENTRYPOINT [ "/app/entrypoint.sh",  \
                "--env", "HOME=/home/uwsgi", \
+               "--http-socket", "0.0.0.0:8000", \
                "--uid", "uwsgi", \
+               "--gid", "uwsgi", \
                "--plugins", "python3", \
-               "--wsgi", "wsgi:application" ]
+               "--need-app", \
+               "--wsgi-file", "wsgi.py" ]

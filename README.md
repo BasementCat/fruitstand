@@ -48,10 +48,29 @@ Configuration may also be passed by setting environment variables.  All supporte
 
 ### Docker
 
-A Dockerfile + compose file are provided for easy setup, running the application via uWSGI and exposing it via nginx on port 8000.  To start:
+#### For Development
 
-    docker compose up -d
-    docker compose exec app -- flask db upgrade
+A Dockerfile + compose file are provided for easy setup, running the application via uWSGI on HTTP port 8000.  To start, run `docker compose up -d`.  This starts the necessary services, and a locally-built app container running several processes that will automatically reload when Python code is changed.
+
+#### For Development - Latest Version
+
+An additional compose file is provided that runs the latest version of the pre-built image with a slightly more robust uWSGI configuration, and does not mount the local repository into the image (and thus won't auto-reload code or reflect changes to the local repository).  To start, run `docker compose -f docker-compose.yaml -f docker-compose-prod.yaml up -d`.
+
+#### For Production
+
+For a completely custom Docker setup, use one of the following images:
+
+  * `ghcr.io/basementcat/fruitstand:latest` - Latest tagged version
+  * `ghcr.io/basementcat/fruitstand:master` - Latest master branch
+  * `ghcr.io/basementcat/fruitstand:develop` - Development branch, likely to be ahead of latest/master, may be broken.
+
+The container can be configured using the environment variables above, or a `.env` file if present.  As above, the application will run on HTTP port 8000 with a minimal uWSGI configuration; you will have to supply any additional configuration as an alternative command or replace the entryoint if you want a different protocol like WSGI.
+
+This approach is recommended for a "real" (i.e. non-development) deployment, as it avoids using the default database passwords and allows for the most flexibility in configuration.
+
+#### Database Migrations
+
+The entrypoint script automatically waits for the database to be ready, and then runs database migrations.  If this behavior is not desired, it can be disabled by setting the environment variable `FRUITSTAND_NO_AUTO_MIGRATE=1` (any non-empty value is acceptable), in which case migrations must be run manually with `docker compose exec app -- flask db upgrade`.
 
 ### Local development environment
 
@@ -63,6 +82,8 @@ In order to run locally you'll need to set up a minimal configuration as explain
     flask db upgrade
     flask run
 
+When pulling a new version, database migrations may be required - run `flask db upgrade` again to apply them if any new migrations are present.
+
 ## Building
 
 To build assets for the main application, as well as any discovered screens:
@@ -73,12 +94,6 @@ To build assets for the main application, as well as any discovered screens:
     flask compile sass --env dev --watch
 
 To build within Docker if you do not set up a local development environment, prefix the commands with `docker compose exec app --`, for example `docker compose exec app -- flask compile sass`
-
-## Docker image
-
-The image built by the Dockerfile runs the application via uWSGI with a minimal configuration; see the docker-compose file for the arguments used to run in WSGI protocol mode.  For alternate deployments, various options can be tuned by setting environment variables or passing command line options, or providing a config file - see the uWSGI documentation.
-
-For example, to run via HTTP (for example, for a reverse proxy that does not speak the WSGI protocol), you can pass a command like `--http=0.0.0.0:8080 --master --processes=4`
 
 ## Sources/Attributions
 
